@@ -13,5 +13,5 @@ func main() {
 		"city"}
 	x := rand.Intn(len(places))
 	fmt.Println(places[x])
-
+	fmt.Println("Just for Pull request test")
 }
