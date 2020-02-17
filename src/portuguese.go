@@ -14,4 +14,5 @@ func main() {
 	x := rand.Intn(len(places))
 	fmt.Println(places[x])
 	fmt.Println("Just for Pull request test")
+	//test to pull back down to computer
 }
