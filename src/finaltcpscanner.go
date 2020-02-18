@@ -66,4 +66,6 @@ func main() {
 	for _, port := range openports {
 		fmt.Printf("%d open\n", port)
 	}
+
+	//testing upload from laptop
 }
