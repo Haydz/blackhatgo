@@ -54,7 +54,30 @@ type HostSearch struct {
 	Matches []Host `json:"matches"`
 }
 
+//trying account profile information
+type AccountProfile struct {
+	member      bool            `json:"member"`
+	credits     int             `json:"credits"`
+	displayName json.RawMessage `json:"display_name"`
+	//accountCreation string
+}
+
 func main() {
+
+	//fmt.Println(string(body))
+
+	//*** THIS DOES NOT WORK***
+	// var ret APIInfo
+	// if err := json.NewDecoder(res.Body).Decode(&ret); err != nil {
+	// 	fmt.Println(err)
+
+	// }
+	// fmt.Println(ret.QueryCredits)
+	//.Println("TEST DECODER")
+	// fmt.Printf(
+	// 	"Query Credits: %d\nScan Credits:  %d\n\n",
+	// 	testStruct2.QueryCredits,
+	// 	testStruct2.ScanCredits)
 
 	if len(os.Args) != 3 {
 		log.Fatalln("Usage: main APIKEY term")
@@ -63,7 +86,13 @@ func main() {
 	var apiKey = os.Args[1]
 	var searchTerm = os.Args[2]
 	const BaseURL = "https://api.shodan.io"
-	//res, err := http.Get("https://api.shodan.io/api-info?key=T2VqWX5fJWIXpZ1I5tMXRMVhAKRqqWbA")
+
+	//May try later, idea is to have a function to handle URLs
+	// func connect(words ...string){
+
+	// 	testConn, err := http.Get(fmt.Sprintf("%s/api-info?key=%s", BaseURL, apiKey))
+	// }
+
 	res, err := http.Get(fmt.Sprintf("%s/api-info?key=%s", BaseURL, apiKey))
 	if err != nil {
 		log.Panicln(err)
@@ -74,27 +103,16 @@ func main() {
 	if err != nil {
 		log.Panicln(err)
 	}
-	fmt.Println(string(body))
 
-	var ret APIInfo
-	if err := json.NewDecoder(res.Body).Decode(&ret); err != nil {
-		fmt.Println(err)
-
-	}
-	fmt.Println(&ret.QueryCredits)
-	//.Println("TEST DECODER")
-	// fmt.Printf(
-	// 	"Query Credits: %d\nScan Credits:  %d\n\n",
-	// 	testStruct2.QueryCredits,
-	// 	testStruct2.ScanCredits)
-
-	responseJson := string(body)
+	responseJSON := string(body)
 	testStruct := APIInfo{}
 	//reading the json un serializing it
 	// aligning with APIInfo struct
 	//unmarshal because JSON is already in memory
-	_ = json.Unmarshal([]byte(responseJson), &testStruct)
-	fmt.Println(testStruct.QueryCredits, "unmarshell credits", "\n", testStruct.Plan, "plan")
+	_ = json.Unmarshal([]byte(responseJSON), &testStruct)
+	fmt.Println("== YOUR API Information")
+	fmt.Println(testStruct.QueryCredits, ":credits\n",
+		testStruct.Plan, ":plan")
 
 	//var requestedReturn APIInfo
 
@@ -111,12 +129,13 @@ func main() {
 
 	//want to add query search now
 	res2, err := http.Get(
-		//fmt.Sprintf("%s/shodan/host/search?key=%s&query=%s", BaseURL, apiKey, searchTerm),
-		"https://api.shodan.io/shodan/host/search?key=T2VqWX5fJWIXpZ1I5tMXRMVhAKRqqWbA&query=hp")
+		fmt.Sprintf("%s/shodan/host/search?key=%s&query=%s", BaseURL, apiKey, searchTerm))
+	//"https://api.shodan.io/shodan/host/search?key=T2VqWX5fJWIXpZ1I5tMXRMVhAKRqqWbA&query=hp")
 	if err != nil {
 		fmt.Println(err)
 	}
-	fmt.Println(searchTerm, apiKey)
+
+	//Parsing JSON from HOST Search
 	body2, err := ioutil.ReadAll(res2.Body)
 	if err != nil {
 		log.Panicln(err)
@@ -128,4 +147,32 @@ func main() {
 	for _, host := range HostTest.Matches {
 		fmt.Printf("%18s%8d\n", host.IPString, host.Port)
 	}
+
+	//Grabbing Account information
+	//accountCall, err := http.Get(fmt.Sprintf("%s/account/profile?key=%s", BaseURL, apiKey))
+	res3, err := http.Get(fmt.Sprintf("https://api.shodan.io/account/profile?key="))
+	if err != nil {
+		log.Panicln(err)
+	}
+	defer res3.Body.Close()
+	//fmt.Println(accountCall)
+	body3, err := ioutil.ReadAll(res3.Body)
+	if err != nil {
+		log.Panicln(err)
+	}
+	//fmt.Println(accountCall.Status)
+
+	responseJSON3 := string(body3)
+	AccountProfileStruct := AccountProfile{}
+	//var testAS AccountProfile
+	//reading the json un serializing it
+	// aligning with APIInfo struct
+	//unmarshal because JSON is already in memory
+	err3 := json.Unmarshal([]byte(responseJSON3), &AccountProfileStruct)
+	if err3 != nil {
+		panic(err3)
+	}
+	fmt.Println("== YOUR Account Information")
+	fmt.Println(AccountProfileStruct.member, ":member")
+
 }
