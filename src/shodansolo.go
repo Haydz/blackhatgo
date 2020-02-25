@@ -64,9 +64,7 @@ type AccountProfile struct {
 
 func main() {
 
-	//fmt.Println(string(body))
-
-	//*** THIS DOES NOT WORK***
+	//*** THIS DOES NOT WORK***===========
 	// var ret APIInfo
 	// if err := json.NewDecoder(res.Body).Decode(&ret); err != nil {
 	// 	fmt.Println(err)
@@ -78,7 +76,7 @@ func main() {
 	// 	"Query Credits: %d\nScan Credits:  %d\n\n",
 	// 	testStruct2.QueryCredits,
 	// 	testStruct2.ScanCredits)
-
+	//=================
 	if len(os.Args) != 3 {
 		log.Fatalln("Usage: main APIKEY term")
 	}
@@ -114,19 +112,6 @@ func main() {
 	fmt.Println(testStruct.QueryCredits, ":credits\n",
 		testStruct.Plan, ":plan")
 
-	//var requestedReturn APIInfo
-
-	//tested := json.NewDecoder(res.Body).Decode(&requestedReturn)
-	//fmt.Println(tested)
-	//fmt.Println(json.NewDecoder(res.Body).Decode(&requestedReturn))
-	//fmt.Println(&tested, "TEST")
-	//info, err := tested.APIInfo()
-
-	// fmt.Printf(
-	// 	"Query Credits: %d\nScan Credits:  %d\n\n",
-	// 	tested.QueryCredits,
-	// 	tested.ScanCredits)
-
 	//want to add query search now
 	res2, err := http.Get(
 		fmt.Sprintf("%s/shodan/host/search?key=%s&query=%s", BaseURL, apiKey, searchTerm))
@@ -148,31 +133,32 @@ func main() {
 		fmt.Printf("%18s%8d\n", host.IPString, host.Port)
 	}
 
+	//**BROKEN OUT INTO OTHER FILE
 	//Grabbing Account information
 	//accountCall, err := http.Get(fmt.Sprintf("%s/account/profile?key=%s", BaseURL, apiKey))
-	res3, err := http.Get(fmt.Sprintf("https://api.shodan.io/account/profile?key="))
-	if err != nil {
-		log.Panicln(err)
-	}
-	defer res3.Body.Close()
-	//fmt.Println(accountCall)
-	body3, err := ioutil.ReadAll(res3.Body)
-	if err != nil {
-		log.Panicln(err)
-	}
-	//fmt.Println(accountCall.Status)
+	// res3, err := http.Get(fmt.Sprintf("https://api.shodan.io/account/profile?key="))
+	// if err != nil {
+	// 	log.Panicln(err)
+	// }
+	// defer res3.Body.Close()
+	// //fmt.Println(accountCall)
+	// body3, err := ioutil.ReadAll(res3.Body)
+	// if err != nil {
+	// 	log.Panicln(err)
+	// }
+	// //fmt.Println(accountCall.Status)
 
-	responseJSON3 := string(body3)
-	AccountProfileStruct := AccountProfile{}
-	//var testAS AccountProfile
-	//reading the json un serializing it
-	// aligning with APIInfo struct
-	//unmarshal because JSON is already in memory
-	err3 := json.Unmarshal([]byte(responseJSON3), &AccountProfileStruct)
-	if err3 != nil {
-		panic(err3)
-	}
-	fmt.Println("== YOUR Account Information")
-	fmt.Println(AccountProfileStruct.member, ":member")
+	// responseJSON3 := string(body3)
+	// AccountProfileStruct := AccountProfile{}
+	// //var testAS AccountProfile
+	// //reading the json un serializing it
+	// // aligning with APIInfo struct
+	// //unmarshal because JSON is already in memory
+	// err3 := json.Unmarshal([]byte(responseJSON3), &AccountProfileStruct)
+	// if err3 != nil {
+	// 	panic(err3)
+	// }
+	// fmt.Println("== YOUR Account Information")
+	// fmt.Println(AccountProfileStruct.member, ":member")
 
 }
