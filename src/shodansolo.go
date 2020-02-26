@@ -9,10 +9,6 @@ import (
 	"os"
 )
 
-//const BaseURL = "https://api.shodan.io"
-
-//const apiKey = "T2VqWX5fJWIXpZ1I5tMXRMVhAKRqqWbA"
-
 type APIInfo struct {
 	QueryCredits int    `json:"query_credits"`
 	ScanCredits  int    `json:"scan_credits"`
@@ -56,9 +52,10 @@ type HostSearch struct {
 
 //trying account profile information
 type AccountProfile struct {
-	member      bool            `json:"member"`
-	credits     int             `json:"credits"`
-	displayName json.RawMessage `json:"display_name"`
+	Member      bool            `json:"member"`
+	Credits     int             `json:"credits"`
+	DisplayName json.RawMessage `json:"display_name"`
+	Created     json.RawMessage `json:"created"`
 	//accountCreation string
 }
 

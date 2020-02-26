@@ -10,9 +10,9 @@ import (
 )
 
 type AccountProfile struct {
-	member      bool            `json:"member"`
-	credits     int             `json:"credits"`
-	displayName json.RawMessage `json:"display_name"`
+	Member      bool            `json:"member"`
+	Credits     int             `json:"credits"`
+	DisplayName json.RawMessage `json:"display_name"`
 	//accountCreation string
 }
 
@@ -27,6 +27,8 @@ func getData(body []byte) (*AccountProfile, error) {
 
 func main() {
 
+	Profile := AccountProfile{}
+
 	if len(os.Args) != 2 {
 		log.Fatalln("Usage: main APIKEY term")
 	}
@@ -35,19 +37,33 @@ func main() {
 
 	//const BaseURL = "https://api.shodan.io"
 
-	res, err := http.Get(fmt.Sprintf("https://api.shodan.io/account/profile?key=%s", apiKey))
-	if err != nil {
-		log.Panicln(err)
+	res, _ := http.Get(fmt.Sprintf("https://api.shodan.io/account/profile?key=%s", apiKey))
+	err2 := json.NewDecoder(res.Body).Decode(&Profile)
+	if err2 != nil {
+		panic(err2)
 	}
 	defer res.Body.Close()
-	//fmt.Println(accountCall)
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		log.Panicln(err)
 	}
-	//fmt.Println(accountCall.Status)
+	_ = json.Unmarshal([]byte(string(body)), &Profile)
 
-	s, err := getData([]byte(body))
-	fmt.Println(s)
+	fmt.Println(Profile.Credits)
+	// 	if err != nil {
+	// 		log.Panicln(err)
+	// 	}
+	// 	defer res.Body.Close()
+	// 	//fmt.Println(accountCall)
+	// 	fmt.Println(res.Status)
+	// 	body, err := ioutil.ReadAll(res.Body)
+	// 	if err != nil {
+	// 		log.Panicln(err)
+	// 	}
+	// 	fmt.Println(body)
+	// 	//fmt.Println(accountCall.Status)
+
+	// 	s, err := getData([]byte(body))
+	// 	fmt.Println(s)
 
 }
