@@ -35,9 +35,9 @@ func main() {
 
 	var apiKey = os.Args[1]
 
-	//const BaseURL = "https://api.shodan.io"
+	const baseURL = "https://api.shodan.io"
 
-	res, _ := http.Get(fmt.Sprintf("https://api.shodan.io/account/profile?key=%s", apiKey))
+	res, _ := http.Get(fmt.Sprintf("%s/account/profile?key=%s", baseURL, apiKey))
 	err2 := json.NewDecoder(res.Body).Decode(&Profile)
 	if err2 != nil {
 		panic(err2)

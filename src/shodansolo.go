@@ -61,19 +61,6 @@ type AccountProfile struct {
 
 func main() {
 
-	//*** THIS DOES NOT WORK***===========
-	// var ret APIInfo
-	// if err := json.NewDecoder(res.Body).Decode(&ret); err != nil {
-	// 	fmt.Println(err)
-
-	// }
-	// fmt.Println(ret.QueryCredits)
-	//.Println("TEST DECODER")
-	// fmt.Printf(
-	// 	"Query Credits: %d\nScan Credits:  %d\n\n",
-	// 	testStruct2.QueryCredits,
-	// 	testStruct2.ScanCredits)
-	//=================
 	if len(os.Args) != 3 {
 		log.Fatalln("Usage: main APIKEY term")
 	}
@@ -132,30 +119,38 @@ func main() {
 
 	//**BROKEN OUT INTO OTHER FILE
 	//Grabbing Account information
-	//accountCall, err := http.Get(fmt.Sprintf("%s/account/profile?key=%s", BaseURL, apiKey))
-	// res3, err := http.Get(fmt.Sprintf("https://api.shodan.io/account/profile?key="))
-	// if err != nil {
-	// 	log.Panicln(err)
-	// }
-	// defer res3.Body.Close()
+	AccountCall, err := http.Get(fmt.Sprintf("%s/account/profile?key=%s", BaseURL, apiKey))
+	//res3, err := http.Get(fmt.Sprintf("https://api.shodan.io/account/profile?key="))
+	if err != nil {
+		log.Panicln(err)
+	}
+	defer AccountCall.Body.Close()
 	// //fmt.Println(accountCall)
-	// body3, err := ioutil.ReadAll(res3.Body)
+	body3, err := ioutil.ReadAll(AccountCall.Body)
 	// if err != nil {
 	// 	log.Panicln(err)
 	// }
 	// //fmt.Println(accountCall.Status)
 
-	// responseJSON3 := string(body3)
-	// AccountProfileStruct := AccountProfile{}
+	responseJSON3 := string(body3)
+	AccountProfileStruct := AccountProfile{}
 	// //var testAS AccountProfile
 	// //reading the json un serializing it
 	// // aligning with APIInfo struct
 	// //unmarshal because JSON is already in memory
-	// err3 := json.Unmarshal([]byte(responseJSON3), &AccountProfileStruct)
-	// if err3 != nil {
-	// 	panic(err3)
-	// }
-	// fmt.Println("== YOUR Account Information")
-	// fmt.Println(AccountProfileStruct.member, ":member")
+	err3 := json.Unmarshal([]byte(responseJSON3), &AccountProfileStruct)
+	if err3 != nil {
+		panic(err3)
+	}
+	fmt.Println("== YOUR Account Information")
+	fmt.Println(AccountProfileStruct.Member, ":member")
 
+	//Attempting with NewDecoder
+
+	var ret APIInfo
+	resp, err := http.Get(fmt.Sprintf("%s/api-info?key=%s", BaseURL, apiKey))
+	if err := json.NewDecoder(resp.Body).Decode(&ret); err != nil {
+		panic(err3)
+	}
+	fmt.Println(ret.Telnet, "Telnet", ret.ScanCredits, "Scan Credits")
 }
