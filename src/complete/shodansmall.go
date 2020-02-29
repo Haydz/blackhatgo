@@ -27,8 +27,6 @@ func getData(body []byte) (*AccountProfile, error) {
 
 func main() {
 
-	Profile := AccountProfile{}
-
 	if len(os.Args) != 2 {
 		log.Fatalln("Usage: main APIKEY term")
 	}
@@ -38,10 +36,8 @@ func main() {
 	const baseURL = "https://api.shodan.io"
 
 	res, _ := http.Get(fmt.Sprintf("%s/account/profile?key=%s", baseURL, apiKey))
-	err2 := json.NewDecoder(res.Body).Decode(&Profile)
-	if err2 != nil {
-		panic(err2)
-	}
+	Profile := AccountProfile{}
+
 	defer res.Body.Close()
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
@@ -50,20 +46,16 @@ func main() {
 	_ = json.Unmarshal([]byte(string(body)), &Profile)
 
 	fmt.Println(Profile.Credits)
-	// 	if err != nil {
-	// 		log.Panicln(err)
-	// 	}
-	// 	defer res.Body.Close()
-	// 	//fmt.Println(accountCall)
-	// 	fmt.Println(res.Status)
-	// 	body, err := ioutil.ReadAll(res.Body)
-	// 	if err != nil {
-	// 		log.Panicln(err)
-	// 	}
-	// 	fmt.Println(body)
-	// 	//fmt.Println(accountCall.Status)
 
-	// 	s, err := getData([]byte(body))
-	// 	fmt.Println(s)
+	//OTHER WAY
+	//with decoder can create struct in 2 ways
+	//Profile2 := AccountProfile{}
+	var Profile2 AccountProfile
+	try2, err := http.Get(fmt.Sprintf("%s/account/profile?key=%s", baseURL, apiKey))
+	err2 := json.NewDecoder(try2.Body).Decode(&Profile2)
+	if err2 != nil {
+		panic(err2)
+	}
+	fmt.Println(Profile2.Credits)
 
 }
