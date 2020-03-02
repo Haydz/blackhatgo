@@ -103,7 +103,6 @@ func main() {
 	if err != nil {
 		fmt.Println(err)
 	}
-
 	//Parsing JSON from HOST Search
 	body2, err := ioutil.ReadAll(res2.Body)
 	if err != nil {
@@ -144,9 +143,7 @@ func main() {
 	}
 	fmt.Println("== YOUR Account Information")
 	fmt.Println(AccountProfileStruct.Member, ":member")
-
 	//Attempting with NewDecoder
-
 	var ret APIInfo
 	resp, err := http.Get(fmt.Sprintf("%s/api-info?key=%s", BaseURL, apiKey))
 	if err := json.NewDecoder(resp.Body).Decode(&ret); err != nil {
