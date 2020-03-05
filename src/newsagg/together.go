@@ -3,33 +3,12 @@ package main
 import (
 	"encoding/xml"
 	"fmt"
+	"html/template"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
 )
-
-type Sitemapindex struct {
-	Locations []string `xml:"sitemap>loc"`
-}
-type News struct {
-	Titles    []string `xml:"url>news>title"`
-	Keywords  []string `xml:"url>news>keywords"`
-	Locations []string `xml:"url>loc"`
-}
-
-type NewsMap struct {
-	Keyword  string
-	Location string
-}
-
-// type Location struct {
-// 	Loc string `xml:"loc"`
-// }
-
-// func (l Location) String() string {
-// 	return fmt.Sprintf(l.Loc)
-// }
 
 func isValidUrl(toTest string) bool {
 	_, err := url.ParseRequestURI(toTest)
@@ -45,7 +24,31 @@ func isValidUrl(toTest string) bool {
 	return true
 }
 
-func main() {
+type NewsMap struct {
+	Keyword  string
+	Location string
+}
+
+type NewsAggPage struct {
+	Title string
+	News  map[string]NewsMap
+}
+
+type Sitemapindex struct {
+	Locations []string `xml:"sitemap>loc"`
+}
+
+type News struct {
+	Titles    []string `xml:"url>news>title"`
+	Keywords  []string `xml:"url>news>keywords"`
+	Locations []string `xml:"url>loc"`
+}
+
+func indexHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "<h1>Whoa, Go is neat!</h1>")
+}
+
+func newsAggHandler(w http.ResponseWriter, r *http.Request) {
 	var s Sitemapindex
 	var n News
 
@@ -61,7 +64,7 @@ func main() {
 		//fmt.Println(Location, "TEST")
 		Location = strings.TrimSpace(Location)
 		fmt.Println(isValidUrl(Location))
-
+		fmt.Println(Location)
 		fmt.Println("IS A VALID URL")
 		resp2, err := http.Get(Location)
 		if err != nil {
@@ -77,11 +80,15 @@ func main() {
 		for idx, _ := range n.Keywords {
 			news_map[n.Titles[idx]] = NewsMap{n.Keywords[idx], n.Locations[idx]}
 		}
-	}
-	for idx, data := range news_map {
-		fmt.Println("\n\n\n\n\n", idx)
-		fmt.Println("\n", data.Keyword)
-		fmt.Println("\n", data.Location)
-	}
+		p := NewsAggPage{Title: "Amazing News Aggregator", News: news_map}
+		t, _ := template.ParseFiles("newsaggtemplate.html")
+		t.Execute(w, p)
 
+	}
+}
+
+func main() {
+	http.HandleFunc("/", indexHandler)
+	http.HandleFunc("/agg/", newsAggHandler)
+	http.ListenAndServe(":8000", nil)
 }
