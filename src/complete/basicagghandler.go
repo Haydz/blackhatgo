@@ -8,7 +8,7 @@ import (
 
 type NewsAggPage struct {
 	Title string
-	News  string
+	News  map[string]NewsMap
 }
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {

@@ -28,6 +28,15 @@ func (c *car) new_top_speed(newspeed float64) {
 	c.top_speed_kmh = newspeed
 }
 
+//testing change
+func (c *car) brakeon(brakelevel uint16) {
+	c.brake_pedal = brakelevel
+}
+
+func newer_top_speed(c car, speed float64) car {
+	c.top_speed_kmh = speed
+	return c
+}
 func main() {
 	//a_car := car{gas_pedal: 16535, brake_pedal: 0, steering_wheel: 12562, top_speed_kmh: 225.0}
 	a_car := car{22314, 0, 12562, 225.0}
@@ -38,5 +47,11 @@ func main() {
 	a_car.new_top_speed(500)
 	fmt.Println("Car is going")
 	fmt.Println("Car is going", a_car.mph(), "MPH", a_car.kmh, "KMH, and top speed is", a_car.top_speed_kmh)
+	a_car.brakeon(922)
+	fmt.Println(a_car.brake_pedal)
+
+	a_car = newer_top_speed(a_car, 500)
+	fmt.Println(a_car.kmh())
+	fmt.Println(a_car.mph())
 
 }
