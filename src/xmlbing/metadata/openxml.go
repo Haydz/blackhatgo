@@ -17,28 +17,26 @@ var OfficeVersions = map[string]string{
 type OfficeCoreProperty struct {
 	XMLName        xml.Name `xml:"coreProperties"`
 	Creator        string   `xml:"creator"`
-	LastModifiedBy string   `xml:lastModified`
+	LastModifiedBy string   `xml:"lastModifiedBy"`
 }
 
 type OfficeAppProperty struct {
-	XMLName     xml.Name `xml:"Porperties"`
-	Application string   `xml:Applciation"`
+	XMLName     xml.Name `xml:"Properties"`
+	Application string   `xml:"Application"`
 	Company     string   `xml:"Company"`
-	Version     string   `xml:"App Version`
+	Version     string   `xml:"AppVersion"`
 }
 
-func (vers *OfficeAppProperty) GetMajorVersion() string {
-	tokens := strings.Split(vers.Version, ".")
-
-	if len(tokens) < 2 {
-		return "Unknown"
+func process(f *zip.File, prop interface{}) error {
+	rc, err := f.Open()
+	if err != nil {
+		return err
 	}
-	v, ok := OfficeVersions[tokens[0]]
-	if !ok {
-		return "Uknown"
-
+	defer rc.Close()
+	if err := xml.NewDecoder(rc).Decode(&prop); err != nil {
+		return err
 	}
-	return v
+	return nil
 }
 
 func NewProperties(r *zip.Reader) (*OfficeCoreProperty, *OfficeAppProperty, error) {
@@ -62,15 +60,15 @@ func NewProperties(r *zip.Reader) (*OfficeCoreProperty, *OfficeAppProperty, erro
 	return &coreProps, &appProps, nil
 }
 
-func process(f *zip.File, prop interface{}) error {
-	rc, err := f.Open()
-	if err != nil {
-		return err
+func (a *OfficeAppProperty) GetMajorVersion() string {
+	tokens := strings.Split(a.Version, ".")
+
+	if len(tokens) < 2 {
+		return "Unknown"
 	}
-	defer rc.Close()
-	// unmarshell data into XML into the struct
-	if err := xml.NewDecoder(rc).Decode(&prop); err != nil {
-		return err
+	v, ok := OfficeVersions[tokens[0]]
+	if !ok {
+		return "Unknown"
 	}
-	return nil
+	return v
 }

@@ -64,7 +64,7 @@ func newsAggHandler(w http.ResponseWriter, r *http.Request) {
 		//fmt.Println(Location, "TEST")
 		Location = strings.TrimSpace(Location)
 		fmt.Println(isValidUrl(Location))
-		fmt.Println(Location)
+			
 		fmt.Println("IS A VALID URL")
 		resp2, err := http.Get(Location)
 		if err != nil {
