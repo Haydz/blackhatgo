@@ -103,17 +103,18 @@ func main() {
 		if err != nil {
 			fmt.Println(err)
 		}
-		//Parsing JSON from HOST Search
 		body2, err := ioutil.ReadAll(res2.Body)
 		if err != nil {
 			log.Panicln(err)
 		}
-		//fmt.Println(res2.Status)
 
 		var HostTest HostSearch
 		_ = json.Unmarshal([]byte(body2), &HostTest)
 		for _, host := range HostTest.Matches {
-			fmt.Printf("%18s%8d\n", host.IPString, host.Port)
+			//fmt.Printf("Host:%18s:%8d\n", strings.TrimSpace(host.IPString), host.Port)
+			// add an array so IF HOST OS add
+
+			fmt.Println("Host:", strings.TrimSpace(host.IPString), host.Port, "Hostnames:", host.Hostnames, "OS:", host.OS)
 		}
 
 	} else if selectionInt == 2 {
