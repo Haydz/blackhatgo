@@ -64,8 +64,8 @@ func newsAggHandler(w http.ResponseWriter, r *http.Request) {
 		//fmt.Println(Location, "TEST")
 		Location = strings.TrimSpace(Location)
 		fmt.Println(isValidUrl(Location))
-
 		fmt.Println("IS A VALID URL")
+		fmt.Println(Location)
 		resp2, err := http.Get(Location)
 		if err != nil {
 			fmt.Println(err)
@@ -90,5 +90,5 @@ func newsAggHandler(w http.ResponseWriter, r *http.Request) {
 func main() {
 	http.HandleFunc("/", indexHandler)
 	http.HandleFunc("/agg/", newsAggHandler)
-	http.ListenAndServe(":8000", nil)
+	http.ListenAndServe(":8001", nil)
 }

@@ -67,14 +67,9 @@ func newsAggHandler(w http.ResponseWriter, r *http.Request) {
 
 	for _, Location := range s.Locations {
 		Location = strings.TrimSpace(Location)
-		fmt.Println("FOUND SITE")
-		fmt.Println(Location)
-	}
-
-	for _, Location := range s.Locations {
-		Location = strings.TrimSpace(Location)
 		wg.Add(1)
-
+		// 	fmt.Println("FOUND SITE")
+		// 	fmt.Println(Location)
 		newsRoutine(queue, Location)
 	}
 	wg.Wait()
