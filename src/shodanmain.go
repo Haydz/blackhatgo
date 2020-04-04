@@ -53,6 +53,14 @@ type HostSearch struct {
 	Matches []Host `json:"matches"`
 }
 
+type IpSearch struct {
+	RegionCode  json.RawMessage `json:"region_code"`
+	IpAddress   string          `json:"ip"`
+	History     bool            `json:history(optional)`
+	Minimal     bool            `json:minify(optional)`
+	CountryName string          `json:"country_name"`
+}
+
 //trying account profile information
 type AccountProfile struct {
 	Member      bool            `json:"member"`
@@ -61,6 +69,9 @@ type AccountProfile struct {
 	Created     json.RawMessage `json:"created"`
 	//accountCreation string
 }
+
+//URL for ip search https://api.shodan.io/shodan/host/134.119.189.29?key={API}
+// https://api.shodan.io/shodan/host/{ip}?key={YOUR_API_KEY}
 
 func main() {
 
@@ -72,8 +83,7 @@ func main() {
 	//var searchTerm = os.Args[2]
 	const BaseURL = "https://api.shodan.io"
 
-	introMessage := `[1] - Search a term
-	[2] - Check Account information`
+	introMessage := `[1] - Search a term     [2] - Check Account information [3] - IP Search`
 
 	fmt.Print(introMessage)
 	fmt.Println(":")
@@ -145,6 +155,36 @@ func main() {
 		}
 		fmt.Println("== YOUR Account Information")
 		fmt.Println(AccountProfileStruct.Member, ":member", AccountProfileStruct.Credits)
+		//Attempting with NewDecoder
+	} else if selectionInt == 3 {
+		fmt.Println("You chose an IP search")
+		fmt.Println("Which IP address do you want to search?: ")
+		chosenIP, _ := reader.ReadString('\n')
+		chosenIP = strings.TrimSpace(chosenIP)
+		fmt.Println(chosenIP)
+
+		//Grabbing Account information
+		IPRequest, err := http.Get(fmt.Sprintf("%s/shodan/host/134.119.189.29?key=%s&minify=true", BaseURL, apiKey))
+		//IPRequest, err := http.Get(fmt.Sprintf("%s/shodan/host/%s?key=%s", BaseURL, chosenIP, apiKey))
+		//https://api.shodan.io/shodan/host/{ip}?key={YOUR_API_KEY}
+		if err != nil {
+			log.Panicln(err)
+		}
+		defer IPRequest.Body.Close()
+		body3, err := ioutil.ReadAll(IPRequest.Body)
+		responseJSON3 := string(body3)
+		IpSearchStruct := IpSearch{}
+		//fmt.Println(body3)
+		// //var testAS AccountProfile
+		// //reading the json un serializing it
+		// // aligning with APIInfo struct
+		// //unmarshal because JSON is already in memory
+		err3 := json.Unmarshal([]byte(responseJSON3), &IpSearchStruct)
+		if err3 != nil {
+			panic(err3)
+		}
+		fmt.Println("==IP Address information")
+		fmt.Println(IpSearchStruct.IpAddress)
 		//Attempting with NewDecoder
 	} else {
 		fmt.Println("Not a valid Option")
