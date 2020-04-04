@@ -10,6 +10,7 @@ func foo(c chan int, someValue int) {
 }
 
 func main() {
+
 	fooVal := make(chan int)
 	go foo(fooVal, 5)
 	go foo(fooVal, 3)
