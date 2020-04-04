@@ -7,7 +7,7 @@ import (
 	"os"
 	"strings"
 )
-
+//IDEA: maybe make the searching an individual function?
 func main() {
 
 	file, err := os.Open("sshinvalid.txt")
