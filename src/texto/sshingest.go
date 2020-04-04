@@ -10,30 +10,6 @@ import (
 
 func main() {
 
-	// //read entire file into memory
-	// data, err := ioutil.ReadFile("sshinvalid.txt")
-	// if err != nil {
-	// 	fmt.Println("File reading error", err)
-	// 	return
-	// }
-	// fmt.Println("FILE:", string(data))
-
-	//parsing as a command line flag
-	//C:/Users/haydn/Desktop/hackers/blackhatgo/src
-	// fptr := flag.String("fpath", "sshinvalid.txt", ".")
-	// flag.Parse()
-
-	// fmt.Println("=============USING FLAG============")
-	// fmt.Println("value of fpath is", *fptr)
-	// data2, err := ioutil.ReadFile(*fptr)
-	// if err != nil {
-	// 	fmt.Println("File reading error", err)
-	// 	return
-	// }
-	// fmt.Println(string(data2))
-	//want to go line by line
-	//fmt.Println(type(data2))
-
 	//Read mode - line by line
 
 	file, err := os.Open("sshinvalid.txt")
