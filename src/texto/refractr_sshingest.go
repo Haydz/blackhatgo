@@ -24,11 +24,6 @@ func main() {
 	}
 	file.Close()
 
-	// fmt.Println("AS EACH LINE")
-	// for _, eachline := range txtlines {
-	// 	fmt.Println(eachline)
-	// }
-	//var invalidUsersString []string
 	var invalidUsers []string
 	//finding all lines with Invalid in line
 	for _, eachline := range txtlines {
@@ -60,32 +55,4 @@ func main() {
 		println("User: ", invalidUsers[x], " was found Invalid")
 	}
 
-	// var invalidUsers []string
-	// fmt.Println("UNVALID USER STRINGS FOUND:")
-	// for i := range invalidUsersString {
-	// 	fmt.Println(invalidUsersString[i])
-	// 	testArray := strings.Fields(invalidUsersString[i])
-
-	// 	invalidFound := false
-	// 	for _, v := range testArray {
-	// 		//fmt.Println(v)
-	// 		if v == "user" {
-	// 			fmt.Println("next iteration is user:")
-	// 			invalidFound = true
-	// 			continue
-	// 		}
-	// 		if invalidFound == true {
-	// 			fmt.Println("Found user name")
-	// 			fmt.Println(v)
-	// 			invalidUsers = append(invalidUsers, v)
-	// 			invalidFound = false
-	// 		}
-
-	// 	}
-	// }
-	// fmt.Println("======Invalid user list========")
-	// //fmt.Println(invalidUsers)
-	// for x := range invalidUsers {
-	// 	println("User: ", invalidUsers[x], " was found Invalid")
-	//}
 }
