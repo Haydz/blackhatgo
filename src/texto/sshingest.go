@@ -89,5 +89,8 @@ func main() {
 		}
 	}
 	fmt.Println("======Invalid user list========")
-	fmt.Println(invalidUsers)
+	//fmt.Println(invalidUsers)
+	for x := range invalidUsers {
+		println("User: ", invalidUsers[x], " was found Invalid")
+	}
 }
