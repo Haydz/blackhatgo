@@ -1,12 +1,14 @@
 package main
 
 //ref: https://golangbot.com/read-files/
+// https://bash-prompt.net/guides/using-logs-1/
 import (
 	"bufio"
 	"fmt"
 	"os"
 	"strings"
 )
+
 //IDEA: maybe make the searching an individual function?
 func main() {
 
@@ -35,6 +37,7 @@ func main() {
 			invalidFound := false
 			ipFound := false
 			userName := ""
+
 			for _, v := range testArray {
 
 				//fmt.Println(v)
@@ -47,9 +50,9 @@ func main() {
 				if invalidFound == true {
 					userName = v
 					//fmt.Println("Found user name")
-					//fmt.Println(v)
+					fmt.Println(v)
 					invalidUsers = append(invalidUsers, v)
-
+					//set back to false for next line
 					invalidFound = false
 					// need to loop to find IP addess
 					for _, v = range testArray {
@@ -59,7 +62,7 @@ func main() {
 							continue
 						}
 						if ipFound == true {
-							fmt.Println("username:", userName, " has IP of ", v)
+							//fmt.Println("username:", userName, " has IP of ", v)
 							ipFound = false
 							// add to MAP
 							ipMapping[userName] = v
