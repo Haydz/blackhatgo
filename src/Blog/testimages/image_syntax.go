@@ -30,39 +30,67 @@ import (
 	"os"
 	"os/exec"
 	"reflect"
+	"runtime"
 	"strings"
 )
 
+// func doWindows() {
+// 	directory, err := exec.Command("cmd", "/C", "echo %cd%").Output()
+// 	if err != nil {
+// 		fmt.Println("Error executing command", err)
+// 	}
+// 	return string(directory[:])
+// }
+
+// func doLinux() {
+// 	directory, err := exec.Command("ls").Output()
+// 	if err != nil {
+// 		fmt.Println("Error executing command", err)
+// 	}
+// 	return string(directory[:])
+// }
+
 func main() {
+	// var command string
+	var osDirFormat string
+	var directory []uint8
+	if runtime.GOOS == "windows" {
+		fmt.Println(runtime.GOOS)
+		//command =
+		osDirFormat = "\\"
+		// err := nil
+		directory, _ = exec.Command("cmd", "/C", "echo %cd%").Output()
+		fmt.Println(reflect.TypeOf(directory).String())
+		//NEED TO FIX ERROR CHECKING
+		// if err != nil {
+		// 	fmt.Println("Error executing command", err)
+		// }
+	} else if runtime.GOOS == "linux" {
+		fmt.Println("linux")
+		directory, _ = exec.Command("pwd").Output()
+		osDirFormat = "/"
 
-	/*
-			    if runtime.GOOS == "windows" {
-		        fmt.Println("Can't Execute this on a windows machine")
-		    } else {
-		        execute()
-			}
-	*/
-
+	}
+	// directory, err := exec.Command("cmd", "/C", "echo %cd%").Output()
 	//identify current working directory
 	// windows: echo %cd% linux :pwd:
-
-	directory, err := exec.Command("cmd", "/C", "echo %cd%").Output()
-	if err != nil {
-		fmt.Println("Error executing command", err)
-	}
-	fmt.Println(string(directory[:]))
+	// directory, err := exec.Command("cmd", "/C", "echo %cd%").Output()
+	// directory, err := exec.Command(command).Output()
+	// if err != nil {
+	// 	fmt.Println("Error executing command", err)
+	// }
+	//fmt.Println(string(directory[:]))
+	//directory, err := exec.Command("cmd", "/C", "echo %cd%").Output()
 	test := string(directory[:])
-	fmt.Println(reflect.TypeOf(test).String())
-	fmt.Printf("%q\n", strings.Split(test, "\\"))
+	//fmt.Println(reflect.TypeOf(test).String())
+	fmt.Printf("%q\n", strings.Split(test, osDirFormat))
 
 	//windows dirs split into slices
-	testSplit := strings.Split(test, "\\")
+	testSplit := strings.Split(test, osDirFormat)
 	//identifying current working Dir
 
-	winStruct := "\\"
-	// linStruct := "/"
 	workingDir := testSplit[len(testSplit)-1]
-	workingDir = strings.TrimSpace(workingDir) + winStruct
+	workingDir = strings.TrimSpace(workingDir) + osDirFormat
 	fmt.Println("Working Directory is:", workingDir)
 	workingDir = strings.TrimSpace(workingDir)
 	//identify files in folder
@@ -81,7 +109,8 @@ func main() {
 	var filesSlice []string
 	for _, files := range filesList {
 		// fmt.Println(files.Name())
-		if files.Name() != "image_syntax.go" && files.Name() != "test.txt" {
+		if files.Name() != "image_syntax.go" && files.Name() != "test.txt" && files.Name() != "image_syntax.exe" {
+			// if files.Name() != ("image_syntax.go", "test.txt", "image_syntax.exe") {
 			filesSlice = append(filesSlice, files.Name())
 		}
 	}

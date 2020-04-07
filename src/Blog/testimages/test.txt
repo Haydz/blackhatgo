@@ -1,2 +1,3 @@
-![prettyimage_1.jpg](testimages\prettyimage_1.jpg)
-![prettyimage_2.jpg](testimages\prettyimage_2.jpg)
+![prettyimage_1.jpg](testimages/prettyimage_1.jpg)
+![prettyimage_2.jpg](testimages/prettyimage_2.jpg)
+![testos.go](testimages/testos.go)
