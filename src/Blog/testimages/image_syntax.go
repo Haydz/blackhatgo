@@ -29,7 +29,6 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"reflect"
 	"runtime"
 	"strings"
 )
@@ -60,7 +59,7 @@ func main() {
 		osDirFormat = "\\"
 		// err := nil
 		directory, _ = exec.Command("cmd", "/C", "echo %cd%").Output()
-		fmt.Println(reflect.TypeOf(directory).String())
+		//fmt.Println(reflect.TypeOf(directory).String())
 		//NEED TO FIX ERROR CHECKING
 		// if err != nil {
 		// 	fmt.Println("Error executing command", err)
