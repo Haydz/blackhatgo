@@ -9,5 +9,8 @@ Aug 23 05:06:06 centos7 sshd[5168]: pam_unix(sshd:auth): authentication failure;
 Aug 23 05:06:06 centos7 sshd[5168]: pam_unix(sshd:auth): authentication failure; logname= uid=0 euid=0 tty=ssh ruser= rhost=218.65.30.123  user=blob
 Aug 23 05:06:06 centos7 sshd[5168]: pam_unix(sshd:auth): authentication failure; logname= uid=0 euid=0 tty=ssh ruser= rhost=218.65.30.123
 Aug 23 05:06:06 centos7 sshd[5168]: pam_unix(sshd:auth): authentication failure; logname= uid=0 euid=0 tty=ssh ruser= rhost=218.65.30.123  user=Jane
+Aug 23 05:06:06 centos7 sshd[5168]: pam_unix(sshd:auth): authentication failure; logname= uid=0 euid=0 tty=ssh ruser= rhost=218.65.30.123  user=root
+Aug 23 05:06:06 centos7 sshd[5168]: pam_unix(sshd:auth): authentication failure; logname= uid=0 euid=0 tty=ssh ruser= rhost=  user=teddy
 Aug 23 03:53:45 centos7 sshd[5494]: Invalid user cancel from
+Aug 23 05:06:06 centos7 sshd[5168]: pam_unix(sshd:auth): authentication failure; logname= uid=0 euid=0 tty=ssh ruser= rhost=  user=tales
 Aug 23 03:53:45 centos7 sshd[5494]: Invalid user Bill3 from 193.201.224.300
