@@ -2,6 +2,7 @@ package main
 
 //ref: https://golangbot.com/read-files/
 // https://bash-prompt.net/guides/using-logs-1/
+//https://medium.com/golangspec/in-depth-introduction-to-bufio-scanner-in-golang-55483bb689b4
 import (
 	"bufio"
 	"fmt"
@@ -25,16 +26,36 @@ func countValidUsers(users []string) int {
 	return len(users)
 }
 
-func printUniqueValue(listusers []string) (map[string]int, string) {
+func printUniqueValue(listusers []string) (map[string]int, string, int) {
 	//Create a   dictionary of values for each element
 	dict := make(map[string]int)
+	started := false
+	oldKey := ""
+	oldValue := 0
 	for _, name := range listusers {
 		dict[name] = dict[name] + 1
+
 	}
-	//lolString := "lolstring"
-	//fmt.Println(dict)
-	//fmt.Println(dict["Haydn"])
-	return dict, "lolstring"
+
+	for key, value := range dict {
+
+		if started == false && oldKey == "" {
+			fmt.Println(":started == false")
+			oldKey = key
+			oldValue = value
+			started = true
+
+		} else {
+			fmt.Println("ELSE")
+			if oldValue < value {
+				oldValue = value
+				oldKey = key
+			}
+		}
+
+	}
+
+	return dict, oldKey, oldValue
 }
 
 //counting key and valu numbers
@@ -64,8 +85,8 @@ func main() {
 		fmt.Println("opening file error", err)
 	}
 
-	scanner := bufio.NewScanner(file)
-	scanner.Split(bufio.ScanLines)
+	scanner := bufio.NewScanner(file) //scans text file
+	scanner.Split(bufio.ScanLines)    // ScanLines is a split function for a Scanner that returns each line of text, stripped of any trailing end-of-line marker.
 	var ipMapping = map[string]string{}
 	var validIpUsers = map[string]string{}
 	var validUsers []string
@@ -87,7 +108,7 @@ func main() {
 			ipAddress := regexp.MustCompile("\\b(?:[0-9]{1,3}\\.){3}[0-9]{1,3}\\b")
 			fmt.Println(ipAddress.FindString(scanner.Text()))
 			if re.FindString(scanner.Text()) != "" {
-				//fmt.Println(re.FindString(scanner.Text()))
+
 				singleUser := strings.Replace(re.FindString(scanner.Text()), "user=", "", -1)
 				allusers = append(allusers, singleUser) // add to allusers includign duplicated
 
@@ -101,7 +122,6 @@ func main() {
 					} else {
 						validIpUsers[singleUser] = ipAddress.FindString(scanner.Text())
 					}
-					//}
 				}
 			}
 		}
@@ -122,31 +142,8 @@ func main() {
 
 	//var uniqueValue = map[string]int{}
 	fmt.Println("allusers", allusers)
-	uniqueValue, lolString := printUniqueValue(allusers)
-	fmt.Println(lolString)
-	fmt.Println(uniqueValue)
-	//var topValue = map[string]int{}
-	//var HighestValue
-	started := false
-	oldKey := ""
-	oldValue := 0
-	for key, value := range uniqueValue {
-
-		if started == false && oldKey == "" {
-			fmt.Println(":started == false")
-			oldKey = key
-			oldValue = value
-			started = true
-
-		} else {
-			fmt.Println("ELSE")
-			if oldValue < value {
-				oldValue = value
-				oldKey = key
-			}
-			//fmt.Println("=======highest", oldKey, oldValue)
-		}
-
-	}
-	fmt.Println("TOP:", oldKey, oldValue)
+	uniqueValue, oldKey, oldValue := printUniqueValue(allusers)
+	fmt.Println("Unique values map: ", uniqueValue)
+	fmt.Println("All unique users are: ", strings.Join(validUsers, ","))
+	fmt.Println("Use with highest attempted logins: ", oldKey, "with a  value of", oldValue)
 }
