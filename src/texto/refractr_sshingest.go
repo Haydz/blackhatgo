@@ -44,6 +44,7 @@ func main() {
 					fmt.Println("Found user name")
 					fmt.Println(v)
 					invalidUsers = append(invalidUsers, v)
+
 					invalidFound = false
 				}
 			}
@@ -54,5 +55,7 @@ func main() {
 	for x := range invalidUsers {
 		println("User: ", invalidUsers[x], " was found Invalid")
 	}
+
+	// I want to find identify the IP addresses and Usernames
 
 }
