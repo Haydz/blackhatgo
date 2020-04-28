@@ -1,5 +1,5 @@
 package main
-
+// mext idea to do stats, like top IP address trying logins and what users
 //ref: https://golangbot.com/read-files/
 // https://bash-prompt.net/guides/using-logs-1/
 import (
