@@ -1,11 +1,13 @@
 package main
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 	"time"
 )
@@ -148,24 +150,17 @@ func main() {
 	username := "haydn.johnson"
 	password := "Iama$35man!"
 
-	dataToAdd := []string{"key", "updated", "summary", "created", "status", "priority", "assignee"}
+	var dataToAdd []string
 
-	//checking which fields to add:
-	key := false
-	updated := false
-	summary := false
-	for _, value := range dataToAdd {
-		switch value {
-		case "key":
-			key = true
-		case "updated":
-			updated = true
-		case "summary":
-			summary = true
-		}
+	reader := bufio.NewReader(os.Stdin)
+	for x := 0; x < 2; x++ {
+		fmt.Println("Add to dataadd")
+		value, _ := reader.ReadString('\n')
+		dataToAdd = append(dataToAdd, strings.TrimSpace(value))
+
 	}
-
-	//Query that will be run
+	fmt.Println("DATATOADD", dataToAdd)
+	//dataToAdd := []string{"key", "updated", "summary", "created", "status", "priority", "assignee"}
 
 	query := []string{"jql", "project=srr and status != Resolved  AND  issuetype not in subtaskIssueTypes()"}
 	fmt.Println("Will run this query in JIRA:: ", query[1])
@@ -176,14 +171,16 @@ func main() {
 	//fmt.Println(issues)
 	for _, issue := range sRROpen.Issues {
 		//fmt.Println(issue.Key+"\t", issue.Fields.Summary+"\t", issue.Fields.Priority.Name+"\t", issue.Self)
-		if key == true {
-			fmt.Print(issue.Key, " ")
-		}
-		if updated == true {
-			fmt.Print(issue.Fields.Updated, " ")
-		}
-		if summary == true {
-			fmt.Print(issue.Fields.Summary, " ")
+
+		for _, value := range dataToAdd {
+			switch value {
+			case "key":
+				fmt.Print(issue.Key, " ")
+			case "updated":
+				fmt.Print(issue.Fields.Updated, " ")
+			case "summary":
+				fmt.Print(issue.Fields.Summary, " ")
+			}
 		}
 		fmt.Println()
 
