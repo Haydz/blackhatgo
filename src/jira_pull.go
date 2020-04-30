@@ -145,8 +145,8 @@ func main() {
 	// }
 	// var username = os.Args[1]
 	// var password = os.Args[2]
-	username := "haydn.johnson"
-	password := "Iama$35man!"
+	username := "NULL"
+	password := "NBULL"
 
 	dataToAdd := []string{"key", "updated", "summary", "created", "status", "priority", "assignee"}
 
