@@ -138,6 +138,21 @@ func queryJira(username string, password string, query []string, dataToAdd []str
 
 }
 
+func remove(s []string, i int) []string {
+	s[i] = s[len(s)-1]
+	// We do not need to put s[i] at the end, as it will be discarded anyway
+	return s[:len(s)-1]
+}
+
+func Find(a []string, x string) int {
+	for i, n := range a {
+		if x == n {
+			return i
+		}
+	}
+	return len(a)
+}
+
 func main() {
 
 	//== THIS IS FOR ENTERING CREDENTIALS ON THE COMMAND LINE
@@ -153,13 +168,22 @@ func main() {
 	var dataToAdd []string
 
 	reader := bufio.NewReader(os.Stdin)
-	for x := 0; x < 2; x++ {
-		fmt.Println("Add to dataadd")
+
+	fieldsToChoose := []string{"created", "updated", "summary", "status", "priority", "assignee"}
+	for x := 0; x < 2; {
+		fmt.Println("Please Enter Fields to print out")
+		fmt.Println(fieldsToChoose)
 		value, _ := reader.ReadString('\n')
-		dataToAdd = append(dataToAdd, strings.TrimSpace(value))
+		value = strings.TrimSpace(value)
+
+		if value == "" {
+			break
+		}
+		fieldsToChoose = remove(fieldsToChoose, Find(fieldsToChoose, value))
+		dataToAdd = append(dataToAdd, value)
 
 	}
-	fmt.Println("DATATOADD", dataToAdd)
+	//fmt.Println("DATATOADD", fieldsToChoose)
 	//dataToAdd := []string{"key", "updated", "summary", "created", "status", "priority", "assignee"}
 
 	query := []string{"jql", "project=srr and status != Resolved  AND  issuetype not in subtaskIssueTypes()"}
@@ -171,20 +195,26 @@ func main() {
 	//fmt.Println(issues)
 	for _, issue := range sRROpen.Issues {
 		//fmt.Println(issue.Key+"\t", issue.Fields.Summary+"\t", issue.Fields.Priority.Name+"\t", issue.Self)
-
+		fmt.Print(issue.Key, " ")
 		for _, value := range dataToAdd {
+
 			switch value {
-			case "key":
-				fmt.Print(issue.Key, " ")
+			// case "key":
+			// 	fmt.Print(issue.Key, " ")
 			case "updated":
 				fmt.Print(issue.Fields.Updated, " ")
 			case "summary":
 				fmt.Print(issue.Fields.Summary, " ")
+
+			case "status":
+				fmt.Print(issue.Fields.Status.Name, " ")
 			}
 		}
 		fmt.Println()
 
 	}
 }
+
+// NEED TO ADD FORMATTING FOR TIME
 
 //https://www.prudentdevs.club/gsheets-go
