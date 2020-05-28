@@ -48,4 +48,5 @@ func main() {
 	// 	fmt.Println(key, value.Name(), value.Size())
 	// }
 
+	fmt.Println(http.ParseHTTPVersion("HTTP/1.0"))
 }
