@@ -27,7 +27,7 @@ func main() {
 		//CheckRedirect: redirectPolicyFunc,
 	}
 
-	resp, err := client.Get("http://example.com/")
+	resp, err := client.Get("http://example.com/test")
 	if err != nil {
 		log.Fatal(err)
 	}
