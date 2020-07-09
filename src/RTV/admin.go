@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"crypto/tls"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -9,7 +10,6 @@ import (
 	"os"
 	"reflect"
 	"strings"
-	"time"
 )
 
 type Results struct {
@@ -17,7 +17,7 @@ type Results struct {
 	ID           int
 	//Command string
 	Output string
-	Time   time.Time
+	Time   string
 }
 
 var (
@@ -61,11 +61,18 @@ func listMode() {
 		decoder.Decode(&outputTest)
 
 		fmt.Println("===Results===")
-		now := time.Now()
+		// currentTime := time.Now()
 
-		fmt.Println("current time is: ", now) // time for logging
+		// fmt.Printf("current time is :%s", currentTime.Format("2006-01-02 15:04:05")) // time for logging
 		// fmt.Println("\ntype is ", reflect.TypeOf(now))
+		fmt.Println("Time of command execution: ", outputTest.Time)
 		fmt.Println(outputTest.ID, outputTest.Output)
+	}
+}
+func checkError(err error) {
+	if err != nil {
+		fmt.Println("Fatal error ", err.Error())
+		os.Exit(1)
 	}
 }
 
@@ -74,6 +81,11 @@ func main() {
 	//parsing flags
 	flag.Parse()
 
+	cert, err := tls.LoadX509KeyPair("C:\\Users\\haydn\\Desktop\\hackers\\blackhatgo\\src\\RTV\\openssl\\ca.pem", "C:\\Users\\haydn\\Desktop\\hackers\\blackhatgo\\src\\RTV\\openssl\\ca.key")
+	checkError(err)
+
+	config := tls.Config{Certificates: []tls.Certificate{cert}}
+
 	if *connect == "" {
 		fmt.Println("empty connection")
 		flag.PrintDefaults()
@@ -81,17 +93,11 @@ func main() {
 	}
 
 	if *commands == true {
-		fmt.Println("COMMAND SET")
-	}
-
-	if *commands == true {
 		listMode()
 
 	} else {
-
-		// PORT := "127.0.0.1:9999"
-		// PORT := os.Args[1]
-		l, err := net.Listen("tcp", *connect)
+		//listener, err := tls.Listen("tcp", service, &config)
+		l, err := tls.Listen("tcp", *connect, &config)
 		if err != nil {
 			fmt.Println(err)
 			return
@@ -127,15 +133,12 @@ func main() {
 
 			var outputTest Results
 			decoder := json.NewDecoder(c)
-
 			decoder.Decode(&outputTest)
-
 			fmt.Println("===Results===")
-			now := time.Now()
 
-			fmt.Printf("current time is :%s", now)
-			fmt.Println(reflect.TypeOf(now))
-			fmt.Println(outputTest.ID, outputTest.Output)
+			fmt.Printf("Time of command execution: :%s\n", outputTest.Time)
+			fmt.Println(outputTest.Output)
+			//outputTest.ID
 
 		}
 	}

