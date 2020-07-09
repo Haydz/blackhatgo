@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"crypto/tls"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -137,7 +136,8 @@ func clientMode() {
 	fmt.Println("###PRINTING TO SCREENONLY FOR DEV PURPOSES###")
 	fmt.Printf("Attempting to connect to %s \n", CONNECT)
 
-	c, err := tls.Dial("tcp", CONNECT, nil)
+	// c, err := tls.Dial("tcp", CONNECT, nil)
+	c, err := net.Dial("tcp", CONNECT)
 	if err != nil {
 		fmt.Println(err)
 		return

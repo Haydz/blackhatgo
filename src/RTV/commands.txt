@@ -1,0 +1,3 @@
+hostname
+whoami
+powershell.exe pwd
