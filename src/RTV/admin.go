@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"crypto/tls"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -14,16 +15,46 @@ import (
 type Results struct {
 	CommandsList []string
 	ID           int
-	//Command string
-	Output string
-	Time   string
+	Command      string
+	Output       string
+	Time         string
 }
 
 var (
 	testArray = []string{"whoami", "hostname"}
 	connect   = flag.String("connect", "", "connection must be in form <ip>:<Port> eg: 127.0.0.1:9999")
 	commands  = flag.String("commands", "", "Execute a list of commands from a file. Include file name eg: commands commands.txt")
+	logging   = flag.Bool("log", false, "Add log if you would like command logs written to a file")
+	fileInfo  *os.FileInfo
 )
+
+func logToFile(outputTest *Results) {
+	var fwrite *os.File
+
+	_, err := os.Stat("logging.txt")
+	//create file
+	if os.IsNotExist(err) {
+		fmt.Println("Creating File")
+		fwrite, _ = os.Create("logging.txt")
+		defer fwrite.Close()
+
+	} else {
+		fmt.Println("File already created, writing to file")
+		fwrite, _ = os.OpenFile("logging.txt", os.O_WRONLY|os.O_APPEND, 0644)
+		defer fwrite.Close()
+		// if err != nil {
+		// 	fmt.Println(err)
+		// 	return
+
+		// }
+
+	}
+	_, err2 := fwrite.WriteString(outputTest.Time + " " + outputTest.Command + " " + outputTest.Output + "\n")
+	if err2 != nil {
+		fmt.Println(err)
+	}
+	fwrite.Close()
+}
 
 func listMode(fileToRead string) {
 	/* Takes a list of commands from a file, reads it in line by line
@@ -78,18 +109,29 @@ func listMode(fileToRead string) {
 
 	for x := 0; x < len(inputTest.CommandsList); x++ {
 		decoder := json.NewDecoder(c)
-
 		decoder.Decode(&outputTest)
 
 		fmt.Println("===Results===")
-		// currentTime := time.Now()
 
-		// fmt.Printf("current time is :%s", currentTime.Format("2006-01-02 15:04:05")) // time for logging
-		// fmt.Println("\ntype is ", reflect.TypeOf(now))
 		fmt.Println("Time of command execution: ", outputTest.Time)
 		fmt.Println(outputTest.ID, outputTest.Output)
+
+		//log to file
+		if *logging != false {
+			// if open == false {
+			// 	fmt.Println("value of OPEN: ", open)
+			logToFile(&outputTest)
+			// 		open = true
+			// 	} else {
+			// 		fmt.Println("value of OPEN: ", open)
+			// 		logToFile(open, &outputTest)
+			// 	}
+
+			// }
+		}
 	}
 }
+
 func checkError(err error) {
 	if err != nil {
 		fmt.Println("Fatal error ", err.Error())
@@ -102,10 +144,10 @@ func main() {
 	//parsing flags
 	flag.Parse()
 
-	// cert, err := tls.LoadX509KeyPair("C:\\Users\\haydn\\Desktop\\hackers\\blackhatgo\\src\\RTV\\openssl\\ca.pem", "C:\\Users\\haydn\\Desktop\\hackers\\blackhatgo\\src\\RTV\\openssl\\ca.key")
-	// checkError(err)
+	cert, err := tls.LoadX509KeyPair("C:\\Users\\haydn\\Desktop\\hackers\\blackhatgo\\src\\RTV\\openssl\\mydomain.com.crt", "C:\\Users\\haydn\\Desktop\\hackers\\blackhatgo\\src\\RTV\\openssl\\mydomain.com.key")
+	checkError(err)
 
-	// config := tls.Config{Certificates: []tls.Certificate{cert}}
+	config := tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
 
 	if *connect == "" {
 		fmt.Println("empty connection")
@@ -113,17 +155,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	if *commands == "" {
-		fmt.Println("no file name included")
-		flag.PrintDefaults()
-		os.Exit(1)
-	} else if *commands != "" {
+	if *commands != "" {
 		listMode(*commands)
 
 	} else {
 
-		// l, err := tls.Listen("tcp", *connect, &config)
-		l, err := net.Listen("tcp", *connect)
+		l, err := tls.Listen("tcp", *connect, &config)
+		// l, err := net.Listen("tcp", *connect)
 		if err != nil {
 			fmt.Println(err)
 			return
@@ -141,8 +179,8 @@ func main() {
 
 		fmt.Println("PARENT CONNECTED")
 
+		//LOOPING for read and writing sockets in NORMAL Mode
 		for {
-			// PORT := ":" + arguments[1]
 
 			reader := bufio.NewReader(os.Stdin)
 			fmt.Print(">> ")
@@ -164,9 +202,20 @@ func main() {
 
 			fmt.Printf("Time of command execution: :%s\n", outputTest.Time)
 			fmt.Println(outputTest.Output)
-			//outputTest.ID
 
+			if *logging != false {
+				// 	if open == false {
+				// 		fmt.Println("value of OPEN: ", open)
+				logToFile(&outputTest)
+				// 		open = true
+				// 	} else {
+				// 		fmt.Println("value of OPEN: ", open)
+				// 		logToFile(open, &outputTest)
+				// 	}
+				// 	//outputTest.ID
+
+			}
 		}
-	}
 
+	}
 }

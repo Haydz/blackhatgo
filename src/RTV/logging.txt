@@ -1,0 +1,17 @@
+2020-07-09 19:41:22 hostname letsdothis
+2020-07-09 19:41:22 whoami letsdothis\haydn
+2020-07-09 19:41:22 powershell.exe pwd Path                                             
+----                                             
+C:\Users\haydn\Desktop\hackers\blackhatgo\src\RTV
+2020-07-09 19:42:14 whoami letsdothis\haydn
+2020-07-09 19:42:22 powershell.exe ls Directory: C:\Users\haydn\Desktop\hackers\blackhatgo\src\RTV
+
+
+Mode                LastWriteTime         Length Name                                                                  
+----                -------------         ------ ----                                                                  
+d-----       2020-07-08   8:27 PM                openssl                                                               
+-a----       2020-07-09   7:42 PM           5025 admin.go                                                              
+-a----       2020-07-09   6:37 PM             36 commands.txt                                                          
+-a----       2020-07-09   7:42 PM            319 logging.txt                                                           
+-a----       2020-07-09   6:54 PM           6262 parent.go                                                             
+-a----       2020-07-09   6:37 PM           2087 refractr_ssh_ip.go
