@@ -2,9 +2,9 @@ package main
 
 import (
 	"bufio"
-	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"net"
 	"os"
 	"strings"
 )
@@ -26,11 +26,7 @@ type Results struct {
 
 func main() {
 
-	cert, err := tls.LoadX509KeyPair("C:\\Users\\haydn\\Desktop\\hackers\\blackhatgo\\src\\RTV\\openssl\\mydomain.com.crt", "C:\\Users\\haydn\\Desktop\\hackers\\blackhatgo\\src\\RTV\\openssl\\mydomain.com.key")
-	checkError(err)
-
-	config := tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
-	l, err := tls.Listen("tcp", "127.0.0.1:9999", &config)
+	l, err := net.Listen("tcp", "127.0.0.1:9999")
 	// l, err := net.Listen("tcp", *connect)
 
 	checkError(err)
