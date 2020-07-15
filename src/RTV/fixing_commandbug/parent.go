@@ -24,6 +24,7 @@ var (
 	parentListen  = flag.String("parentlisten", "", "What Port should the parent listen on, for use in Client modeconnection must be in form <port> eg: 10000")
 	// parentListen string = "127.0.0.1:10000"
 	skipEnter = flag.Bool("skip", false, "Will skip Enter requirement and run automatically, speeds testing")
+	tlsOn     = flag.Bool("tls", false, "Will add TLS to the network traffic")
 	mode      = flag.String("mode", "", "mode {client|parent|list}")
 )
 
@@ -114,23 +115,23 @@ func executeCommand(checkOS string, commandString string) *Results {
 	return outputTest
 }
 
-func listMode() {
+func listMode(c net.Conn) {
 	fmt.Println("###PRINTING TO SCREENONLY in ListMode")
 
 	fmt.Println("Running in Command List Mode")
-	fmt.Println("Please note, List Mode does not use TLS\n")
+	// fmt.Println("Please note, List Mode does not use TLS\n")
 
 	if *skipEnter == false {
 		reader := bufio.NewReader(os.Stdin)
 		fmt.Println("<PRESS ENTER TO CONTINUE>")
 		_, _ = reader.ReadString('\n')
 	}
-	// clientConnect2 := *clientConnect
-	c, err := net.Dial("tcp", *clientConnect)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+	// // clientConnect2 := *clientConnect
+	// c, err := net.Dial("tcp", *clientConnect)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	return
+	// }
 	defer c.Close()
 	fmt.Println("Attempting to connect to ", *clientConnect, "\n")
 	fmt.Println("===Connection successful==")
@@ -163,55 +164,86 @@ func connectTLS() net.Conn {
 	fmt.Printf("Using %s mode \n", *mode)
 
 	var c net.Conn
-	CA_Pool := x509.NewCertPool()
-	severCert, err := ioutil.ReadFile("../openssl/mydomain.com.crt")
-	if err != nil {
-		log.Fatal("Could not load server certificate!")
-	}
-	CA_Pool.AppendCertsFromPEM(severCert)
-
-	config := tls.Config{RootCAs: CA_Pool}
-
-	if *mode == "client" {
-		fmt.Printf("Attempting to connect to %s \n", *clientConnect)
-		c, err = tls.Dial("tcp", *clientConnect, &config)
-		// c, err := net.Dial("tcp", CONNECT)
-		fmt.Println("===Connection Successful==")
+	if *tlsOn == true {
+		CA_Pool := x509.NewCertPool()
+		severCert, err := ioutil.ReadFile("../openssl/mydomain.com.crt")
 		if err != nil {
-			fmt.Println(err)
+			log.Fatal("Could not load server certificate!")
+		}
+		CA_Pool.AppendCertsFromPEM(severCert)
+
+		config := tls.Config{RootCAs: CA_Pool}
+
+		if *mode == "client" {
+			fmt.Printf("Attempting to connect to %s with TLS \n ", *clientConnect)
+			c, err = tls.Dial("tcp", *clientConnect, &config)
+			// c, err := net.Dial("tcp", CONNECT)
+			fmt.Println("===Connection Successful==")
+			if err != nil {
+				fmt.Println(err)
+			}
+		} else if *mode == "list" {
+			fmt.Printf("Attempting to connect to %s with no TLS \n", *clientConnect)
+			c, err = tls.Dial("tcp", *clientConnect, &config)
+			// c, err := net.Dial("tcp", CONNECT)
+			if err != nil {
+				fmt.Println(err)
+			}
+
+			fmt.Println("===Connection Successful==")
+		} else if *mode == "parent" {
+			fmt.Printf("Attempting to connect to %s with TLS \n", *parentConnect)
+			c, err = tls.Dial("tcp", *parentConnect, &config)
+			// c, err := net.Dial("tcp", CONNECT)
+			fmt.Println("===Connection Successful==")
+			if err != nil {
+				fmt.Println(err)
+			}
+		} else if *mode == "parentlist" {
+			fmt.Printf("Attempting to connect to %s with TLS \n", *parentConnect)
+			c, err = tls.Dial("tcp", *parentConnect, &config)
+			// c, err := net.Dial("tcp", CONNECT)
+			fmt.Println("===Connection Successful==")
 		}
 
-	} else if *mode == "parent" {
-		fmt.Printf("Attempting to connect to %s \n", *parentConnect)
-		c, err = tls.Dial("tcp", *parentConnect, &config)
-		// c, err := net.Dial("tcp", CONNECT)
-		fmt.Println("===Connection Successful==")
-		if err != nil {
-			fmt.Println(err)
+	} else {
+		if *mode == "client" {
+			fmt.Printf("Attempting to connect to %s with no TLS \n", *clientConnect)
+			c, _ = net.Dial("tcp", *clientConnect)
+
+			fmt.Println("===Connection Successful==")
+			// if err != nil {
+			// 	fmt.Println(err)
+			// }
+
+		} else if *mode == "list" {
+			fmt.Printf("Attempting to connect to %s with no TLS \n", *clientConnect)
+			c, _ = net.Dial("tcp", *clientConnect)
+
+			fmt.Println("===Connection Successful==")
+		} else if *mode == "parent" {
+			fmt.Printf("Attempting to connect to %s with no TLS \n", *parentConnect)
+			c, _ = net.Dial("tcp", *parentConnect)
+			// c, err := net.Dial("tcp", CONNECT)
+			fmt.Println("===Connection Successful==")
+			// if err != nil {
+			// 	fmt.Println(err)
+			// }
+
+		} else if *mode == "parentlist" {
+			fmt.Printf("Attempting to connect to %s with no TLS \n", *parentConnect)
+			c, _ = net.Dial("tcp", *parentConnect)
+			// c, err := net.Dial("tcp", CONNECT)
+			fmt.Println("===Connection Successful==")
 		}
+
 	}
+	// need to add parent mode LISTEN
 	return c
 }
 
 func clientMode(c net.Conn) {
-	// fmt.Println("###PRINTING TO SCREENONLY FOR DEV PURPOSES###")
-	// fmt.Printf("Attempting to connect to %s \n", *clientConnect)
 
-	// CA_Pool := x509.NewCertPool()
-	// severCert, err := ioutil.ReadFile("../openssl/mydomain.com.crt")
-	// if err != nil {
-	// 	log.Fatal("Could not load server certificate!")
-	// }
-	// CA_Pool.AppendCertsFromPEM(severCert)
-
-	// config := tls.Config{RootCAs: CA_Pool}
-	// fmt.Println("===Connection Successful==")
-	// c, err := tls.Dial("tcp", *clientConnect, &config)
-	// // c, err := net.Dial("tcp", CONNECT)
-	// if err != nil {
-	// 	fmt.Println(err)
-	// 	return
-	// }
 	defer c.Close()
 
 	fmt.Println("Listening for commands")
@@ -243,28 +275,23 @@ func clientMode(c net.Conn) {
 
 }
 
-func parentMode(c net.Conn) {
-
+func parentListMode(c net.Conn) {
+	fmt.Println("inside parent mode LIST")
 	defer c.Close()
 
-	cert, err := tls.LoadX509KeyPair("C:\\Users\\haydn\\Desktop\\hackers\\blackhatgo\\src\\RTV\\openssl\\mydomain.com.crt", "C:\\Users\\haydn\\Desktop\\hackers\\blackhatgo\\src\\RTV\\openssl\\mydomain.com.key")
-	checkError(err)
-
-	configServer := tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
-
+	var l2 net.Listener
 	PORT := *parentListen
-	// l2, err := net.Listen("tcp", PORT)
-	// if err != nil {
-	// 	fmt.Println(err)
-	// 	return
-	// }
 
-	l2, err := tls.Listen("tcp", PORT, &configServer)
-	// l, err := net.Listen("tcp", *connect)
-	checkError(err)
-	if err != nil {
-		fmt.Println("error listening", err)
-		return
+	if *tlsOn == true {
+		cert, err := tls.LoadX509KeyPair("C:\\Users\\haydn\\Desktop\\hackers\\blackhatgo\\src\\RTV\\openssl\\mydomain.com.crt", "C:\\Users\\haydn\\Desktop\\hackers\\blackhatgo\\src\\RTV\\openssl\\mydomain.com.key")
+		checkError(err)
+
+		configServer := tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
+
+		l2, _ = tls.Listen("tcp", PORT, &configServer)
+
+	} else {
+		l2, _ = net.Listen("tcp", PORT)
 	}
 
 	defer l2.Close()
@@ -276,6 +303,68 @@ func parentMode(c net.Conn) {
 	} else {
 		fmt.Println("CHILD connected on", PORT)
 	}
+	//f if commands list is blank
+
+	// need to Decode
+	var inputTest Results
+	decoder := json.NewDecoder(c)
+	decoder.Decode(&inputTest)
+
+	encoder := json.NewEncoder(c2)
+	// fmt.Printf("current time is :%s", currentTime.Format("2006-01-02 15:04:05"))
+
+	encoder.Encode(inputTest)
+	// decoder := json.NewDecoder(c)
+	// decoder.Decode(&outputTest)
+
+	//receiving
+	var outputTest Results
+
+	for x := 0; x < len(inputTest.CommandsList); x++ {
+		decoder := json.NewDecoder(c2)
+		decoder.Decode(&outputTest)
+		encoder := json.NewEncoder(c)
+		encoder.Encode(outputTest)
+		// fmt.Println("===Results===")
+
+		// fmt.Println("Time of command execution: ", outputTest.Time)
+		// fmt.Println(outputTest.ID, outputTest.Output)
+
+		// } else {
+		// 	logToFile(&outputTest, "default")
+		// }
+	}
+
+}
+
+func parentMode(c net.Conn) {
+
+	defer c.Close()
+	var l2 net.Listener
+	PORT := *parentListen
+
+	if *tlsOn == true {
+		cert, err := tls.LoadX509KeyPair("C:\\Users\\haydn\\Desktop\\hackers\\blackhatgo\\src\\RTV\\openssl\\mydomain.com.crt", "C:\\Users\\haydn\\Desktop\\hackers\\blackhatgo\\src\\RTV\\openssl\\mydomain.com.key")
+		checkError(err)
+
+		configServer := tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
+
+		l2, err = tls.Listen("tcp", PORT, &configServer)
+
+	} else {
+		l2, _ = net.Listen("tcp", PORT)
+	}
+
+	defer l2.Close()
+
+	fmt.Println("SERVER ESTABLISHED ON: " + PORT + " WAITING FOR CHILD TO CONNECT")
+	c2, err := l2.Accept()
+	if err != nil {
+		fmt.Println(err, "UNABLE TO CONNECT")
+	} else {
+		fmt.Println("CHILD connected on", PORT)
+	}
+	//f if commands list is blank
 
 	for {
 
@@ -333,7 +422,9 @@ func main() {
 		fmt.Println("parent mode chosen")
 		parentMode(connectTLS())
 	} else if *mode == "list" {
-		listMode()
+		listMode(connectTLS())
+	} else if *mode == "parentlist" {
+		parentListMode(connectTLS())
 	} else {
 		fmt.Println("ERROR")
 		os.Exit(1)

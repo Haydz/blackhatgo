@@ -1,2 +1,6 @@
 hostname
 whoami
+echo "hellO"
+whoami
+powershell.exe netstat -ano
+powershell.exe Get-Service
