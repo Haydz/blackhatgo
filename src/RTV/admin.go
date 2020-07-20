@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"net"
 	"os"
 	"reflect"
@@ -28,19 +29,34 @@ var (
 	fileInfo  *os.FileInfo
 )
 
+func checkFile(filename string) error {
+	_, err := os.Stat(filename)
+	if os.IsNotExist(err) {
+		_, err := os.Create(filename)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func logToFile(outputTest *Results) {
 	var fwrite *os.File
-
-	_, err := os.Stat("logging.txt")
+	fileName := "logging.json"
+	_, err := os.Stat(fileName)
 	//create file
 	if os.IsNotExist(err) {
 		fmt.Println("Creating File")
-		fwrite, _ = os.Create("logging.txt")
+		fwrite, _ = os.Create(fileName)
+		file, _ := json.MarshalIndent(outputTest, "", " ")
+		_ = ioutil.WriteFile(fileName, file, 0644)
 		defer fwrite.Close()
 
 	} else {
 		fmt.Println("File already created, writing to file")
-		fwrite, _ = os.OpenFile("logging.txt", os.O_WRONLY|os.O_APPEND, 0644)
+		file, _ := json.MarshalIndent(outputTest, "", " ")
+		fwrite, _ = os.OpenFile(fileName, os.O_WRONLY|os.O_APPEND, 0644)
+		_, _ = fwrite.WriteAt(file, 0644)
 		defer fwrite.Close()
 		// if err != nil {
 		// 	fmt.Println(err)
@@ -49,10 +65,14 @@ func logToFile(outputTest *Results) {
 		// }
 
 	}
-	_, err2 := fwrite.WriteString(outputTest.Time + " " + outputTest.Command + " " + outputTest.Output + "\n")
-	if err2 != nil {
-		fmt.Println(err)
-	}
+
+	// file, _ := json.MarshalIndent(outputTest, "", " ")
+	// _ = ioutil.WriteFile("test.json", file, 0644)
+	// _, err2 := fwrite.WriteString(outputTest.Time + " " + outputTest.Command + " " + outputTest.Output + "\n")
+	// _, err2 := fwrite.WriteFile(&outputTest)
+	// if err2 != nil {
+	// 	fmt.Println(err)
+	// }
 	fwrite.Close()
 }
 

@@ -1,0 +1,7 @@
+{
+ "CommandsList": null,
+ "ID": 1,
+ "Command": "powershell.exe pwd",
+ "Output": "Path                                             \r\n----                                             \r\nC:\\Users\\haydn\\Desktop\\hackers\\blackhatgo\\src\\RTV",
+ "Time": "2020-07-11 13:48:48"
+}

