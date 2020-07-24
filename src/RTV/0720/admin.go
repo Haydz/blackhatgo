@@ -22,6 +22,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"regexp"
 	"strings"
 )
 
@@ -47,9 +48,11 @@ var (
 	commands = flag.String("commands", "", "Execute a list of commands from a file. Include file name eg: commands commands.txt")
 	//Logging to a file
 	loggingName = flag.String("log", "", "Log to a json file. eg \"-log logfile\" will log commands to logfile.json")
-	//
-	// fileInfo    *os.FileInfo
-	tlsOn     = flag.Bool("tls", false, "Will add TLS to the network traffic")
+
+	// fileInfo    *os.FileInfo - testing if can delete
+	// TLS or no TLS
+	tlsOn = flag.Bool("tls", false, "Will add TLS to the network traffic")
+	//Skip Pauses in tool
 	skipEnter = flag.Bool("skip", false, "Will skip Enter requirement and run automatically, speeds testing")
 )
 
@@ -240,7 +243,31 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Check connect has port and IP
+
 	// NEED ERROR LOGGING FOR IP THAT DOES NOT HAVE PORT NUMBER
+	// func MatchString(pattern string, s string) (matched bool, err error)
+
+	// ipTest := strings.Split(*connect, ":")
+
+	patternIP := "^(?:[0-9]{1,3}\\.){3}[0-9]{1,3}:([0-9]{1,4}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$"
+	regexIP, _ := regexp.MatchString(patternIP, *connect)
+	if regexIP == false {
+		fmt.Println("ERROR: NOT IN CORRECT IP FORMAT such as 192.168.0.1:1234")
+		os.Exit(1)
+	}
+
+	// if len(ipTest) != 2 && ipTest[1] == "" {
+	// 	fmt.Println("missing port number")
+	// 	os.Exit(1)
+	// }
+
+	// portCheck, _ := strconv.Atoi(ipTest[1])
+
+	// if portCheck > 65535 {
+	// 	fmt.Println("Not a valid port number. Greater than 65535")
+	// 	os.Exit(1)
+	// }
 
 	if *commands != "" {
 		listMode(*commands, connectTLS())
@@ -248,37 +275,48 @@ func main() {
 	} else { // ELSE will run standard client mode
 		fmt.Println("Running in Standard Client Server Mode")
 		// send program flow to create socket
-		c := connectTLS()
-
 		for {
-			// Read in data from CLI, send to listening client
-			reader := bufio.NewReader(os.Stdin)
-			fmt.Print(">> ")
-			text, _ := reader.ReadString('\n')
-			fmt.Fprintf(c, text+"\n")
 
-			// if STOp is typed
-			if strings.TrimSpace(string(text)) == "STOP" {
+			c := connectTLS()
+
+			for {
+				// Read in data from CLI, send to listening client
+				reader := bufio.NewReader(os.Stdin)
+				fmt.Print(">> ")
+				text, _ := reader.ReadString('\n')
+
 				fmt.Fprintf(c, text+"\n")
-				fmt.Println("Closing TCP server!")
 
-				return
-			}
-			/* receiving data
-			creating a decode, attaching the connect c
-			decoding into Results struct
-			*/
-			var outputTest Results
-			decoder := json.NewDecoder(c)
-			decoder.Decode(&outputTest)
-			fmt.Println("===Results===")
+				// if STOp is typed
+				if strings.TrimSpace(string(text)) == "STOP" {
+					fmt.Fprintf(c, text+"\n")
+					fmt.Println("Closing TCP server!")
 
-			fmt.Printf("Time of command execution: :%s\n", outputTest.Time)
-			fmt.Println(outputTest.Output)
+					return
+				}
+				/* receiving data
+				creating a decode, attaching the connect c
+				decoding into Results struct
+				*/
+				var outputTest Results
+				decoder := json.NewDecoder(c)
 
-			//log commands at end of loop if selected
-			if *loggingName != "" {
-				logToFile(&outputTest)
+				//catch if connect was closed
+				if err := decoder.Decode(&outputTest); err != nil {
+					log.Println(err.Error())
+					fmt.Println("!!!! LOST CONNECTION RESTARTING !!!! ")
+
+					break // break out of loop and restart a connection and listen
+				}
+				fmt.Println("===Results===")
+
+				fmt.Printf("Time of command execution: :%s\n", outputTest.Time)
+				fmt.Println(outputTest.Output)
+
+				//log commands at end of loop if selected
+				if *loggingName != "" {
+					logToFile(&outputTest)
+				}
 			}
 		}
 

